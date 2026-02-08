@@ -1,0 +1,145 @@
+HR Payroll Admin Report App (Version 1) — PRD
+Date: 2026-02-08
+Project: HR Payroll Admin Report App
+
+Goal
+Build a payroll admin system that imports staff from Excel, maintains payroll-related logs, and generates monthly payroll results, payslips, and a monthly admin report PDF. Version 1 excludes leave and leave rosters.
+
+Core rules (must be enforced)
+1) No staff data is inserted or populated until the admin uploads an Excel sheet inside the app and confirms import. No seed, sample, or assumed staff records.
+2) Privacy and secrets: All DB credentials and Supabase connection strings must live only in .env.local and hosting provider environment variables. Never print/log them, never commit to git, never place them in README, screenshots, or code.
+3) Single admin login only. Use credentials stored in DB with hashed password.
+
+Scope (Version 1 only)
+In scope
+- Staff list + staff profile
+- Two guarantors per staff
+- Salary history
+- Manual lateness log
+- Manual absence log (permission / no permission)
+- Query and surcharge log
+- Manual deductions entry (categories matching monthly report)
+- Monthly payroll run (end of month)
+- Payslip PDF
+- Monthly admin report PDF matching provided Word report layout
+- Excel upload to create/update staff list data
+- Single admin login
+
+Out of scope
+- Leave processing and leave roster
+- Leave carryover (explicitly no carryover)
+
+Key formulas and mappings (must be exact)
+- Daily rate divisor: 31
+- Lateness mapping (late days -> deduction days):
+  0–2 => 0
+  3–4 => 1
+  5–7 => 2
+  8–10 => 3
+  11–15 => 4
+  16+ => 5
+- Absence with permission: deduct 1 day per record
+- Absence without permission: deduct 2 days per record
+- No leave carryover and leave is out of scope for v1
+
+Users
+- Single admin (no staff self-service)
+
+Data entry sources
+- Staff master data via Excel upload only (confirm import required)
+- Lateness, absence, queries, manual deductions entered manually in the app
+
+Excel upload requirements (staff create/update)
+- Accept .xlsx
+- Required columns: Full name, Department, Position, Resumption date, Monthly salary
+- Optional columns: Staff ID, Status, Phone, Bank details, Guarantor columns
+- Matching update logic:
+  1) If Staff ID exists and matches, update
+  2) Else if Full name + Phone match, update
+  3) Else create new staff record
+- Salary handling on upload:
+  - Do not write salary directly to Staff table
+  - Create SalaryHistory effective from resumption date or first day of current month
+  - If salary exists for same effective_from, update it
+- Two-phase import:
+  - Phase 1 preview only (no DB writes)
+  - Phase 2 confirm import (single transaction)
+- Guarantors:
+  - Only populate from Excel if guarantor columns exist
+  - Otherwise leave empty and flag missing guarantors
+
+Modules & requirements
+1) Auth
+- Single admin credentials stored in DB with hashed password
+- All pages protected
+
+2) Staff
+- Staff list with search/filter
+- Staff profile with: basic info, guarantor slots (1 & 2), salary history, tabs for lateness, absence, queries, manual deductions, payroll history
+
+3) Lateness log
+- Add record: staff + date
+- Prevent duplicates for same staff/date
+- Filter by month
+
+4) Absence log
+- Add record: staff + date + permission type
+- Prevent duplicates for same staff/date
+- Filter by month
+
+5) Query log
+- Add record: staff + date + reason
+- surcharge_amount number
+- penalty_days number optional
+- Filter by month
+
+6) Manual deductions
+- Per staff per month
+- Category enum (must match monthly report):
+  - New staff statutory deduction
+  - Absence lateness permission
+  - City ledger query
+  - Staff meal ticket
+  - Control debt
+  - Staff rent
+  - Bank charges
+  - Old statutory deduction
+  - Payee
+  - Debt deduct
+  - Meeting debit
+  - Cleaning debit
+  - Other
+- Quick add templates: meal ticket, meeting debit, cleaning debit
+
+7) Payroll runs
+- PayrollRun per month/year with statuses: draft, approved, paid
+- Include only active staff
+- Base salary from SalaryHistory for payroll month
+- Daily rate = base salary / 31
+- Lateness deduction amount = lateness deduction days * daily rate
+- Absence deduction days = AP*1 + AU*2; amount = days * daily rate
+- Query deductions: sum surcharge_amount + (penalty_days * daily rate)
+- Manual deductions: sum all manual deductions for staff/month (excluding categories already calculated unless explicitly added)
+- Net pay = base salary - total deductions (+ allowances if implemented later)
+- Results stored in PayrollLine and PayrollDeductionLine (frozen after approval)
+- Approval locks edits; marking paid per staff or entire run
+
+8) Payslips
+- PDF per staff per month
+- Includes company header, staff details, salary, daily rate divisor 31, deduction breakdown, net pay, payment status/date
+- Single download and bulk export
+
+9) Monthly admin report PDF
+- Must match provided Word report layout
+- Sections and calculations defined in docs/report_map.txt
+
+Non-functional
+- Audit fields: created_at, updated_at, created_by (optional) on relevant tables
+- Basic audit logs for payroll approvals and salary changes (later step)
+- No sensitive values logged
+
+Acceptance criteria (v1)
+- No staff record exists before Excel upload confirm
+- All formulas match requirements
+- Report and payslip PDFs render and export correctly
+- All pages require auth

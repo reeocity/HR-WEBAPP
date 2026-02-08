@@ -1,0 +1,90 @@
+Monthly Admin Report — Section Map (Version 1)
+Source: Provided Word report layout (not included in repo). This map mirrors the required sections listed in scope and must be verified against the actual Word report when available.
+
+Section 1: Summary Table
+- Source tables: PayrollRun, PayrollLine, PayrollDeductionLine
+- Calculation logic:
+  - Total Pay: sum PayrollLine.base_salary for the month
+  - Total Deductions: sum PayrollLine.total_deductions for the month
+  - Refund: sum negative deductions or explicit refund lines (if implemented)
+  - Net Pay: sum PayrollLine.net_pay for the month
+- PDF output requirement: Summary table at top with columns matching Word report (totals only). Must match order/labels from Word.
+
+Section 2: Total Staff Strength
+- Source tables: Staff, PayrollLine
+- Calculation logic:
+  - Count of staff included in payroll run for month (active staff only)
+- PDF output requirement: Single line showing total staff count.
+
+Section 3: New Staff Statutory Deduction Table
+- Source tables: Staff, SalaryHistory, PayrollLine, PayrollDeductionLine, ManualDeduction
+- Calculation logic:
+  - Identify new staff by resumption date relative to payroll month
+  - Deduction = 25% of monthly salary for new staff
+  - Derive month count since resumption and label as 1st month, 2nd month, etc.
+  - Include only entries categorized as "New staff statutory deduction"
+- PDF output requirement: Table listing staff, resumption date, month count, salary, 25% deduction. Must match Word columns and order.
+
+Section 4: Permission No Pay Table
+- Source tables: AbsenceLog, PayrollLine, PayrollDeductionLine
+- Calculation logic:
+  - Absence with permission: deduct 1 day per record
+  - Amount = deducted days * (monthly salary / 31)
+- PDF output requirement: Table listing staff, total permission absence days, amount deducted. Match Word layout.
+
+Section 5: Absence and Lateness Table
+- Source tables: AbsenceLog, LatenessLog, PayrollLine, PayrollDeductionLine
+- Calculation logic:
+  - Lateness days mapped to deduction days:
+    0–2=>0, 3–4=>1, 5–7=>2, 8–10=>3, 11–15=>4, 16+=>5
+  - Absence without permission: deduct 2 days per record
+  - Amounts = deduction days * (monthly salary / 31)
+- PDF output requirement: Table listing staff, lateness days, lateness deduction days, absence without permission days, total deduction amount. Match Word layout.
+
+Section 6: Query Table
+- Source tables: QueryLog, PayrollLine, PayrollDeductionLine
+- Calculation logic:
+  - Surcharge amount: sum of surcharge_amount for month
+  - Penalty days: sum penalty_days * (monthly salary / 31)
+  - Total query deduction = surcharge sum + penalty days amount
+- PDF output requirement: Table listing staff, reason, surcharge, penalty days, total. Match Word layout.
+
+Section 7: Meal Ticket Table
+- Source tables: ManualDeduction
+- Calculation logic:
+  - Include category = "Staff meal ticket" for month
+- PDF output requirement: Table listing staff, amount, note. Match Word layout.
+
+Section 8: Meeting and Cleaning Debit Table
+- Source tables: ManualDeduction
+- Calculation logic:
+  - Include categories "Meeting debit" and "Cleaning debit" for month
+- PDF output requirement: Table listing staff, category, amount, note. Match Word layout.
+
+Section 9: Staff Rent Table
+- Source tables: ManualDeduction
+- Calculation logic:
+  - Include category = "Staff rent" for month
+- PDF output requirement: Table listing staff, amount, note. Match Word layout.
+
+Section 10: Resignation / Termination List
+- Source tables: Staff
+- Calculation logic:
+  - Include staff with status marked as resigned/terminated in month (status field)
+- PDF output requirement: List of staff names and effective dates. Match Word layout.
+
+Section 11: New Staff Employed List
+- Source tables: Staff
+- Calculation logic:
+  - Staff with resumption date within payroll month
+- PDF output requirement: List of staff names, department, resumption date. Match Word layout.
+
+Section 12: Refund and Change of Account Section
+- Source tables: ManualDeduction (or dedicated refund table if added later), PayrollDeductionLine
+- Calculation logic:
+  - Refunds or account changes recorded as negative deductions or explicit refund entries
+- PDF output requirement: Narrative or table per Word report, including staff and amount.
+
+Notes
+- Final section order, headings, and column labels must be validated against the Word report when provided.
+- Leave processing is out of scope for v1 and must not appear in the report.
