@@ -28,11 +28,12 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
     orderBy: { effectiveFrom: "desc" },
   });
 
-  const [lateness, absence, queries, manual] = await Promise.all([
+  const [lateness, absence, queries, manual, mealTickets] = await Promise.all([
     prisma.latenessLog.findMany({ where: { staffId, date: { gte: start, lt: end } }, orderBy: { date: "asc" } }),
     prisma.absenceLog.findMany({ where: { staffId, date: { gte: start, lt: end } }, orderBy: { date: "asc" } }),
     prisma.queryLog.findMany({ where: { staffId, date: { gte: start, lt: end } }, orderBy: { date: "asc" } }),
     prisma.manualDeduction.findMany({ where: { staffId, month, year }, orderBy: { createdAt: "asc" } }),
+    prisma.staffMealTicket.findMany({ where: { staffId, date: { gte: start, lt: end } } }),
   ]);
 
   const grossSalary = Number(salary?.monthlySalary ?? 0);
@@ -58,13 +59,16 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
   const queryPenaltyDaysTotal = queries.reduce((sum, q) => sum + Number(q.penaltyDays || 0), 0);
   const queryPenaltyDeduction = queryPenaltyDaysTotal * dailySalary;
 
+  const mealTicketTotal = mealTickets.reduce((sum, m) => sum + Number(m.amount || 0), 0);
+
   const netSalary =
     grossSalary -
     absenceDeduction -
     latenessDeduction -
     manualDeductionsTotal -
     querySurchargeTotal -
-    queryPenaltyDeduction;
+    queryPenaltyDeduction -
+    mealTicketTotal;
 
   return NextResponse.json({
     staff: {
@@ -90,6 +94,7 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
       amount: m.amount.toString(),
       note: m.note,
     })),
+    mealTickets: mealTickets.map((m) => ({ id: m.id, date: m.date.toISOString().slice(0, 10), amount: m.amount.toString() })),
     totals: {
       grossSalary,
       dailySalary,
@@ -100,6 +105,7 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
       querySurchargeTotal,
       queryPenaltyDaysTotal,
       queryPenaltyDeduction,
+      mealTicketTotal,
       netSalary,
     },
   });

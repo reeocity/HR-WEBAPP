@@ -11,6 +11,7 @@ type PayslipData = {
   absence: { id: string; date: string; type: "PERMISSION" | "NO_PERMISSION" }[];
   queries: { id: string; date: string; reason: string; surchargeAmount: string | null; penaltyDays: number | null }[];
   manual: { id: string; category: string; amount: string; note: string | null }[];
+  mealTickets: { id: string; date: string; amount: string }[];
   totals: {
     grossSalary: number;
     dailySalary: number;
@@ -21,6 +22,7 @@ type PayslipData = {
     querySurchargeTotal: number;
     queryPenaltyDaysTotal: number;
     queryPenaltyDeduction: number;
+    mealTicketTotal: number;
     netSalary: number;
   };
 };
@@ -60,6 +62,7 @@ export default function PayslipPage() {
   const netSalary = data?.totals.netSalary ?? 0;
   const queryPenaltyDaysTotal = data?.totals.queryPenaltyDaysTotal ?? 0;
   const queryPenaltyDeduction = data?.totals.queryPenaltyDeduction ?? 0;
+  const mealTicketTotal = data?.totals.mealTicketTotal ?? 0;
 
   return (
     <section className="card payslip-card">
@@ -117,6 +120,9 @@ export default function PayslipPage() {
             <div className="label">Query Penalty Days ({queryPenaltyDaysTotal} day)</div>
             <div>-{queryPenaltyDeduction.toFixed(2)}</div>
 
+            <div className="label">Meal Tickets</div>
+            <div>-{mealTicketTotal.toFixed(2)}</div>
+
             <div className="label"><strong>Net Salary</strong></div>
             <div><strong>{netSalary.toFixed(2)}</strong></div>
           </div>
@@ -155,6 +161,15 @@ export default function PayslipPage() {
             <ul className="payslip-list">
               {data.manual.map((m) => (
                 <li key={m.id}>{m.category}: {m.amount} {m.note ? `— ${m.note}` : ""}</li>
+              ))}
+            </ul>
+          )}
+
+          <h3>Meal Tickets</h3>
+          {data.mealTickets.length === 0 ? <p className="muted">None</p> : (
+            <ul className="payslip-list">
+              {data.mealTickets.map((m) => (
+                <li key={m.id}>{m.date}: ₦{m.amount}</li>
               ))}
             </ul>
           )}

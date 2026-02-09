@@ -15,10 +15,11 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
   });
   if (!staff) return NextResponse.json({ message: "Not found" }, { status: 404 });
 
-  const [latenessLogs, absenceLogs, queryLogs] = await Promise.all([
+  const [latenessLogs, absenceLogs, queryLogs, mealTickets] = await Promise.all([
     prisma.latenessLog.findMany({ where: { staffId: staff.id }, orderBy: { date: "desc" }, take: 20 }),
     prisma.absenceLog.findMany({ where: { staffId: staff.id }, orderBy: { date: "desc" }, take: 20 }),
     prisma.queryLog.findMany({ where: { staffId: staff.id }, orderBy: { date: "desc" }, take: 20 }),
+    prisma.staffMealTicket.findMany({ where: { staffId: staff.id }, orderBy: { date: "desc" }, take: 20 }),
   ]);
 
   return NextResponse.json({
@@ -29,6 +30,7 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
     latenessLogs: latenessLogs.map((l) => ({ ...l, date: l.date.toISOString().slice(0, 10) })),
     absenceLogs: absenceLogs.map((a) => ({ ...a, date: a.date.toISOString().slice(0, 10) })),
     queryLogs: queryLogs.map((q) => ({ ...q, date: q.date.toISOString().slice(0, 10) })),
+    mealTickets: mealTickets.map((m) => ({ ...m, date: m.date.toISOString().slice(0, 10), amount: m.amount.toString() })),
   });
 }
 

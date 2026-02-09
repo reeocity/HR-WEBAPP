@@ -14,6 +14,8 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+
+  staffMealTickets StaffMealTicket[]
 }
 
 model Staff {
@@ -31,13 +33,14 @@ model Staff {
   updatedAt      DateTime @updatedAt @map("updated_at")
   createdById    String?  @map("created_by")
 
-  guarantors     Guarantor[]
-  salaryHistory  SalaryHistory[]
-  latenessLogs   LatenessLog[]
-  absenceLogs    AbsenceLog[]
-  queryLogs      QueryLog[]
+  guarantors       Guarantor[]
+  salaryHistory    SalaryHistory[]
+  latenessLogs     LatenessLog[]
+  absenceLogs      AbsenceLog[]
+  queryLogs        QueryLog[]
   manualDeductions ManualDeduction[]
-  payrollLines   PayrollLine[]
+  payrollLines     PayrollLine[]
+  staffMealTickets StaffMealTicket[]
 }
 
 model Guarantor {
@@ -50,7 +53,7 @@ model Guarantor {
   updatedAt   DateTime @updatedAt @map("updated_at")
   createdById String?  @map("created_by")
 
-  staff       Staff    @relation(fields: [staffId], references: [id])
+  staff Staff @relation(fields: [staffId], references: [id])
 
   @@unique([staffId, slot], name: "staffId_slot")
 }
@@ -58,13 +61,13 @@ model Guarantor {
 model SalaryHistory {
   id            String   @id @default(cuid())
   staffId       String   @map("staff_id")
-  monthlySalary Decimal  @db.Decimal(12, 2) @map("monthly_salary")
+  monthlySalary Decimal  @map("monthly_salary") @db.Decimal(12, 2)
   effectiveFrom DateTime @map("effective_from")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
   createdById   String?  @map("created_by")
 
-  staff         Staff    @relation(fields: [staffId], references: [id])
+  staff Staff @relation(fields: [staffId], references: [id])
 
   @@unique([staffId, effectiveFrom], name: "staffId_effectiveFrom")
 }
@@ -77,7 +80,7 @@ model LatenessLog {
   updatedAt   DateTime @updatedAt @map("updated_at")
   createdById String?  @map("created_by")
 
-  staff       Staff    @relation(fields: [staffId], references: [id])
+  staff Staff @relation(fields: [staffId], references: [id])
 
   @@unique([staffId, date], name: "staffId_date_late")
 }
@@ -96,23 +99,23 @@ model AbsenceLog {
   updatedAt   DateTime    @updatedAt @map("updated_at")
   createdById String?     @map("created_by")
 
-  staff       Staff       @relation(fields: [staffId], references: [id])
+  staff Staff @relation(fields: [staffId], references: [id])
 
   @@unique([staffId, date], name: "staffId_date_abs")
 }
 
 model QueryLog {
-  id             String   @id @default(cuid())
-  staffId        String   @map("staff_id")
-  date           DateTime @map("date")
-  reason         String   @map("reason")
-  surchargeAmount Decimal? @db.Decimal(12, 2) @map("surcharge_amount")
-  penaltyDays    Int?     @map("penalty_days")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-  createdById    String?  @map("created_by")
+  id              String   @id @default(cuid())
+  staffId         String   @map("staff_id")
+  date            DateTime @map("date")
+  reason          String   @map("reason")
+  surchargeAmount Decimal? @map("surcharge_amount") @db.Decimal(12, 2)
+  penaltyDays     Int?     @map("penalty_days")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdById     String?  @map("created_by")
 
-  staff          Staff    @relation(fields: [staffId], references: [id])
+  staff Staff @relation(fields: [staffId], references: [id])
 }
 
 enum ManualDeductionCategory {
@@ -137,13 +140,13 @@ model ManualDeduction {
   month       Int                     @map("month")
   year        Int                     @map("year")
   category    ManualDeductionCategory @map("category")
-  amount      Decimal                 @db.Decimal(12, 2) @map("amount")
+  amount      Decimal                 @map("amount") @db.Decimal(12, 2)
   note        String?                 @map("note")
   createdAt   DateTime                @default(now()) @map("created_at")
   updatedAt   DateTime                @updatedAt @map("updated_at")
   createdById String?                 @map("created_by")
 
-  staff       Staff                   @relation(fields: [staffId], references: [id])
+  staff Staff @relation(fields: [staffId], references: [id])
 }
 
 enum PayrollStatus {
@@ -172,20 +175,20 @@ enum PayrollPaymentStatus {
 }
 
 model PayrollLine {
-  id             String               @id @default(cuid())
-  payrollRunId   String               @map("payroll_run_id")
-  staffId        String               @map("staff_id")
-  baseSalary     Decimal              @db.Decimal(12, 2) @map("base_salary")
-  dailyRate      Decimal              @db.Decimal(12, 2) @map("daily_rate")
-  totalDeductions Decimal             @db.Decimal(12, 2) @map("total_deductions")
-  netPay         Decimal              @db.Decimal(12, 2) @map("net_pay")
-  paymentStatus  PayrollPaymentStatus @map("payment_status")
-  paidAt         DateTime?            @map("paid_at")
-  createdAt      DateTime             @default(now()) @map("created_at")
-  updatedAt      DateTime             @updatedAt @map("updated_at")
+  id              String               @id @default(cuid())
+  payrollRunId    String               @map("payroll_run_id")
+  staffId         String               @map("staff_id")
+  baseSalary      Decimal              @map("base_salary") @db.Decimal(12, 2)
+  dailyRate       Decimal              @map("daily_rate") @db.Decimal(12, 2)
+  totalDeductions Decimal              @map("total_deductions") @db.Decimal(12, 2)
+  netPay          Decimal              @map("net_pay") @db.Decimal(12, 2)
+  paymentStatus   PayrollPaymentStatus @map("payment_status")
+  paidAt          DateTime?            @map("paid_at")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
 
-  payrollRun     PayrollRun           @relation(fields: [payrollRunId], references: [id])
-  staff          Staff                @relation(fields: [staffId], references: [id])
+  payrollRun     PayrollRun             @relation(fields: [payrollRunId], references: [id])
+  staff          Staff                  @relation(fields: [staffId], references: [id])
   deductionLines PayrollDeductionLine[]
 }
 
@@ -202,10 +205,21 @@ model PayrollDeductionLine {
   id            String               @id @default(cuid())
   payrollLineId String               @map("payroll_line_id")
   type          PayrollDeductionType @map("type")
-  amount        Decimal              @db.Decimal(12, 2) @map("amount")
+  amount        Decimal              @map("amount") @db.Decimal(12, 2)
   note          String?              @map("note")
   createdAt     DateTime             @default(now()) @map("created_at")
   updatedAt     DateTime             @updatedAt @map("updated_at")
 
-  payrollLine   PayrollLine          @relation(fields: [payrollLineId], references: [id])
+  payrollLine PayrollLine @relation(fields: [payrollLineId], references: [id])
+}
+
+model StaffMealTicket {
+  id          String   @id @default(cuid())
+  staffId     String   @map("staff_id")
+  staff       Staff    @relation(fields: [staffId], references: [id])
+  date        DateTime @map("date")
+  amount      Decimal  @default(500) @map("amount") @db.Decimal(12, 2)
+  createdById String   @map("created_by")
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
 }

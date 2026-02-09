@@ -35,9 +35,11 @@ export default function StaffDetailPage() {
   const [queryReason, setQueryReason] = useState("");
   const [querySurcharge, setQuerySurcharge] = useState("");
   const [queryPenaltyDays, setQueryPenaltyDays] = useState("");
+  const [mealDate, setMealDate] = useState("");
 
   const [latenessLogs, setLatenessLogs] = useState<LatenessLog[]>([]);
   const [absenceLogs, setAbsenceLogs] = useState<AbsenceLog[]>([]);
+  const [mealLogs, setMealLogs] = useState<{ id: string; date: string; amount: string }[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -53,6 +55,7 @@ export default function StaffDetailPage() {
         setStaff(data.staff);
         setLatenessLogs(data.latenessLogs ?? []);
         setAbsenceLogs(data.absenceLogs ?? []);
+        setMealLogs(data.mealTickets ?? []);
       } catch {
         setMessage("Failed to load staff.");
       } finally {
@@ -139,6 +142,22 @@ export default function StaffDetailPage() {
     setQueryReason("");
     setQuerySurcharge("");
     setQueryPenaltyDays("");
+  };
+
+  const addMealTicket = async () => {
+    if (!mealDate) return;
+    const res = await fetch(`/api/staff/${staffId}/meal-ticket`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: mealDate }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data?.message ?? "Failed to add meal ticket.");
+      return;
+    }
+    setMealLogs((prev) => [data.log, ...prev]);
+    setMealDate("");
   };
 
   if (isLoading || !staff) {
@@ -259,6 +278,20 @@ export default function StaffDetailPage() {
             <button className="button secondary" onClick={addQuery}>Add Query</button>
           </div>
         </div>
+      </section>
+
+      <section className="card">
+        <h2>Meal Tickets (₦500/day)</h2>
+        <div className="grid grid-3" style={{ gap: "12px", marginTop: "12px" }}>
+          <label>
+            <span className="muted">Date Purchased</span>
+            <input className="input" type="date" value={mealDate} onChange={(e) => setMealDate(e.target.value)} />
+          </label>
+          <div style={{ display: "flex", alignItems: "flex-end" }}>
+            <button className="button secondary" onClick={addMealTicket}>Add Ticket</button>
+          </div>
+        </div>
+        <p className="muted" style={{ marginTop: "8px" }}>Total this staff: {mealLogs.length}</p>
       </section>
     </div>
   );
