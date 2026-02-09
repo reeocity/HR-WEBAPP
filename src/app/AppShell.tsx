@@ -6,7 +6,7 @@ import LogoutButton from "@/components/LogoutButton";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const hideNav = pathname === "/login";
+  const hideNav = pathname === "/login" || pathname === "/setup";
 
   if (hideNav) {
     return <div>{children}</div>;

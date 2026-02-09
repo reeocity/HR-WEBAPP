@@ -1,4 +1,5 @@
 import LoginForm from "./login-form";
+import DbStatus from "@/components/DbStatus";
 
 export default function LoginPage() {
   return (
@@ -10,6 +11,7 @@ export default function LoginPage() {
         </p>
         <div style={{ marginTop: "24px" }}>
           <LoginForm />
+          <DbStatus />
         </div>
       </div>
     </div>

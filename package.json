@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prisma:local": "dotenv -e .env.local -- prisma",
+    "migrate:local": "dotenv -e .env.local -- prisma migrate dev",
+    "db:pull:local": "dotenv -e .env.local -- prisma db pull"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",
@@ -20,6 +23,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "prisma": "^6.19.2",
