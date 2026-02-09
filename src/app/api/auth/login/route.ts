@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     });
 
     return response;
-  } catch (error) {
-    return NextResponse.json({ message: "Unable to sign in." }, { status: 500 });
+  } catch {
+    return NextResponse.json({ message: "Login failed" }, { status: 401 });
   }
 }

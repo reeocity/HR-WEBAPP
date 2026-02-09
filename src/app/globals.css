@@ -42,8 +42,9 @@ a {
 .card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
 
 .muted {
@@ -61,7 +62,7 @@ a {
   color: var(--primary-foreground);
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.15s ease;
 }
 
 .button.secondary {
@@ -82,6 +83,15 @@ a {
   border-radius: 8px;
   border: 1px solid var(--border);
   background: #ffffff;
+  color: var(--foreground);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .grid {
@@ -115,8 +125,88 @@ a {
   flex-wrap: wrap;
 }
 
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.section-subtitle {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+.table thead th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 8px 12px;
+}
+
+.table tbody tr {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  border-radius: 12px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.table tbody tr:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  border-color: #cbd5f5;
+}
+
+.table tbody td {
+  padding: 14px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.table tbody tr td:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.table tbody tr td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
+  }
+}
+
+@media (max-width: 900px) {
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
   }
 }

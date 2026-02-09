@@ -1,0 +1,42 @@
+.payslip-card {
+  display: grid;
+  gap: 16px;
+}
+
+.payslip-controls {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.payslip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.payslip-section {
+  margin-top: 8px;
+}
+
+.payslip-list {
+  margin: 8px 0 0 16px;
+}
+
+.payslip-summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  max-width: 520px;
+}
+
+.payslip-summary .label {
+  color: var(--muted);
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .card { box-shadow: none; border: none; }
+  body { background: #fff; }
+}

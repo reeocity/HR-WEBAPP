@@ -1,0 +1,165 @@
+"use client";
+
+import "./../payslip.css";
+import { useEffect, useState, useCallback } from "react";
+import { useParams } from "next/navigation";
+
+type PayslipData = {
+  staff: { id: string; staffId: string | null; fullName: string; department: string; position: string };
+  salary: { monthlySalary: string; effectiveFrom: string } | null;
+  lateness: { id: string; date: string }[];
+  absence: { id: string; date: string; type: "PERMISSION" | "NO_PERMISSION" }[];
+  queries: { id: string; date: string; reason: string; surchargeAmount: string | null; penaltyDays: number | null }[];
+  manual: { id: string; category: string; amount: string; note: string | null }[];
+  totals: {
+    grossSalary: number;
+    dailySalary: number;
+    absenceDeduction: number;
+    latenessDeductionDays: number;
+    latenessDeduction: number;
+    manualDeductionsTotal: number;
+    querySurchargeTotal: number;
+    queryPenaltyDaysTotal: number;
+    queryPenaltyDeduction: number;
+    netSalary: number;
+  };
+};
+
+export default function PayslipPage() {
+  const params = useParams<{ staffId: string }>();
+  const staffId = params.staffId;
+
+  const now = new Date();
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(now.getFullYear());
+  const [data, setData] = useState<PayslipData | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setMessage(null);
+    const res = await fetch(`/api/payslips/${staffId}?month=${month}&year=${year}`);
+    const json = await res.json();
+    if (!res.ok) {
+      setMessage(json?.message ?? "Failed to load payslip.");
+      return;
+    }
+    setData(json);
+  }, [staffId, month, year]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, [load]);
+
+  const grossSalary = data?.totals.grossSalary ?? 0;
+  const manualDeductionsTotal = data?.totals.manualDeductionsTotal ?? 0;
+  const querySurchargeTotal = data?.totals.querySurchargeTotal ?? 0;
+  const absenceDeduction = data?.totals.absenceDeduction ?? 0;
+  const latenessDeductionDays = data?.totals.latenessDeductionDays ?? 0;
+  const latenessDeduction = data?.totals.latenessDeduction ?? 0;
+  const netSalary = data?.totals.netSalary ?? 0;
+  const queryPenaltyDaysTotal = data?.totals.queryPenaltyDaysTotal ?? 0;
+  const queryPenaltyDeduction = data?.totals.queryPenaltyDeduction ?? 0;
+
+  return (
+    <section className="card payslip-card">
+      <div className="no-print payslip-controls">
+        <label>
+          <span className="muted">Month</span>
+          <input className="input" type="number" min={1} max={12} value={month} onChange={(e) => setMonth(Number(e.target.value))} />
+        </label>
+        <label>
+          <span className="muted">Year</span>
+          <input className="input" type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} />
+        </label>
+        <button className="button" onClick={() => window.print()}>Print Payslip</button>
+      </div>
+
+      {message ? <p className="muted">{message}</p> : null}
+
+      {data ? (
+        <div className="print-area">
+          <h1>Monthly Payslip</h1>
+          <p className="muted">Period: {month}/{year}</p>
+
+          <div className="divider" />
+
+          <div className="payslip-grid">
+            <div>
+              <p><strong>Name:</strong> {data.staff.fullName}</p>
+              <p><strong>Staff ID:</strong> {data.staff.staffId ?? "-"}</p>
+            </div>
+            <div>
+              <p><strong>Department:</strong> {data.staff.department}</p>
+              <p><strong>Position:</strong> {data.staff.position}</p>
+            </div>
+          </div>
+
+          <div className="divider" />
+
+          <h3>Salary Summary</h3>
+          <div className="payslip-summary">
+            <div className="label">Gross Monthly Salary</div>
+            <div>{grossSalary.toFixed(2)}</div>
+
+            <div className="label">Absence Deduction</div>
+            <div>-{absenceDeduction.toFixed(2)}</div>
+
+            <div className="label">Lateness Deduction ({latenessDeductionDays} day)</div>
+            <div>-{latenessDeduction.toFixed(2)}</div>
+
+            <div className="label">Manual Deductions</div>
+            <div>-{manualDeductionsTotal.toFixed(2)}</div>
+
+            <div className="label">Query Surcharges</div>
+            <div>-{querySurchargeTotal.toFixed(2)}</div>
+
+            <div className="label">Query Penalty Days ({queryPenaltyDaysTotal} day)</div>
+            <div>-{queryPenaltyDeduction.toFixed(2)}</div>
+
+            <div className="label"><strong>Net Salary</strong></div>
+            <div><strong>{netSalary.toFixed(2)}</strong></div>
+          </div>
+
+          <div className="divider" />
+
+          <h3>Queries</h3>
+          {data.queries.length === 0 ? <p className="muted">None</p> : (
+            <ul className="payslip-list">
+              {data.queries.map((q) => (
+                <li key={q.id}>{q.date}: {q.reason} (Surcharge: {q.surchargeAmount ?? "-"}, Penalty Days: {q.penaltyDays ?? "-"})</li>
+              ))}
+            </ul>
+          )}
+
+          <h3>Absence</h3>
+          {data.absence.length === 0 ? <p className="muted">None</p> : (
+            <ul className="payslip-list">
+              {data.absence.map((a) => (
+                <li key={a.id}>{a.date}: {a.type}</li>
+              ))}
+            </ul>
+          )}
+
+          <h3>Lateness</h3>
+          {data.lateness.length === 0 ? <p className="muted">None</p> : (
+            <ul className="payslip-list">
+              {data.lateness.map((l) => (
+                <li key={l.id}>{l.date}</li>
+              ))}
+            </ul>
+          )}
+
+          <h3>Manual Deductions</h3>
+          {data.manual.length === 0 ? <p className="muted">None</p> : (
+            <ul className="payslip-list">
+              {data.manual.map((m) => (
+                <li key={m.id}>{m.category}: {m.amount} {m.note ? `— ${m.note}` : ""}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+    </section>
+  );
+}

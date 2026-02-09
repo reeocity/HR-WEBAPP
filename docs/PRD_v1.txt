@@ -51,8 +51,20 @@ Data entry sources
 
 Excel upload requirements (staff create/update)
 - Accept .xlsx
-- Required columns: Full name, Department, Position, Resumption date, Monthly salary
-- Optional columns: Staff ID, Status, Phone, Bank details, Guarantor columns
+- Accepted columns (use these exact headers as in the Excel):
+  - Staff ID (optional)
+  - Fullname (required)
+  - department (required)
+  - position (required)
+  - resumption date (required)
+  - monthly salary (required)
+  - status (optional)
+  - Bank Details (optional)
+  - bank name (optional)
+  - Guarantor 1 Name (optional)
+  - Guarantor 1 Phone (optional)
+  - Guarantor 2 Name (optional)
+  - Guarantor 2 Phone (optional)
 - Matching update logic:
   1) If Staff ID exists and matches, update
   2) Else if Full name + Phone match, update
