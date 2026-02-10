@@ -27,6 +27,23 @@ export default function StaffListPage() {
     missingGuarantorCount: number;
     errors: { rowNumber: number; message: string }[];
   } | null>(null);
+
+  const handleDownloadErrors = () => {
+    if (!previewData || previewData.errors.length === 0) return;
+    const header = "rowNumber,message\n";
+    const rows = previewData.errors
+      .map((e) => `${e.rowNumber},"${e.message.replace(/"/g, '""')}"`)
+      .join("\n");
+    const csv = header + rows;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "staff-import-errors.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [staff, setStaff] = useState<StaffRow[]>([]);
@@ -84,6 +101,22 @@ export default function StaffListPage() {
       setStaffError("Failed to load staff.");
     } finally {
       setIsLoadingStaff(false);
+    }
+  };
+
+  const handleDeleteStaff = async (id: string) => {
+    if (!window.confirm("Delete this staff and all related records?")) return;
+    setStaffError(null);
+    try {
+      const res = await fetch(`/api/staff/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) {
+        setStaffError(data?.message ?? "Failed to delete staff.");
+        return;
+      }
+      setStaff((prev) => prev.filter((row) => row.id !== id));
+    } catch {
+      setStaffError("Failed to delete staff.");
     }
   };
 
@@ -236,6 +269,7 @@ export default function StaffListPage() {
                   <th>Status</th>
                   <th>Phone</th>
                   <th>Resumption Date</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -252,6 +286,17 @@ export default function StaffListPage() {
                     <td>{row.status ?? "-"}</td>
                     <td>{row.phone ?? "-"}</td>
                     <td>{row.resumptionDate ? row.resumptionDate.slice(0, 10) : "-"}</td>
+                    <td>
+                      <button
+                        className="button secondary"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDeleteStaff(row.id);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

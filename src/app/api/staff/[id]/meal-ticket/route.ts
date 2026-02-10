@@ -34,3 +34,18 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     },
   });
 }
+
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const { id } = await context.params;
+  const body = await request.json();
+  if (!body?.logId) return NextResponse.json({ message: "logId is required." }, { status: 400 });
+
+  const log = await prisma.staffMealTicket.findUnique({ where: { id: body.logId } });
+  if (!log || log.staffId !== id) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+  await prisma.staffMealTicket.delete({ where: { id: body.logId } });
+  return NextResponse.json({ ok: true });
+}

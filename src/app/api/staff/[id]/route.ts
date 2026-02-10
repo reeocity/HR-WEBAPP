@@ -55,3 +55,28 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   });
   return NextResponse.json({ staff });
 }
+
+export async function DELETE(_: Request, context: { params: Promise<{ id: string }> }) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const { id } = await context.params;
+
+  const existing = await prisma.staff.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+  await prisma.$transaction([
+    prisma.guarantor.deleteMany({ where: { staffId: id } }),
+    prisma.salaryHistory.deleteMany({ where: { staffId: id } }),
+    prisma.latenessLog.deleteMany({ where: { staffId: id } }),
+    prisma.absenceLog.deleteMany({ where: { staffId: id } }),
+    prisma.queryLog.deleteMany({ where: { staffId: id } }),
+    prisma.manualDeduction.deleteMany({ where: { staffId: id } }),
+    prisma.staffMealTicket.deleteMany({ where: { staffId: id } }),
+    prisma.payrollDeductionLine.deleteMany({ where: { payrollLine: { staffId: id } } }),
+    prisma.payrollLine.deleteMany({ where: { staffId: id } }),
+    prisma.staff.delete({ where: { id } }),
+  ]);
+
+  return NextResponse.json({ ok: true });
+}

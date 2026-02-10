@@ -109,6 +109,22 @@ export default function ManualDeductionsPage() {
     await loadLogs();
   };
 
+  const deleteDeduction = async (id: string) => {
+    if (!window.confirm("Delete this deduction?")) return;
+    setMessage(null);
+    const res = await fetch("/api/deductions", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data?.message ?? "Failed to delete.");
+      return;
+    }
+    await loadLogs();
+  };
+
   useEffect(() => {
     loadStaff();
   }, []);
@@ -186,6 +202,7 @@ export default function ManualDeductionsPage() {
                 <th>Category</th>
                 <th>Amount</th>
                 <th>Reason</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -196,6 +213,11 @@ export default function ManualDeductionsPage() {
                   <td>{l.category}</td>
                   <td>{l.amount}</td>
                   <td>{l.note ?? "-"}</td>
+                  <td>
+                    <button className="button secondary" onClick={() => deleteDeduction(l.id)}>
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

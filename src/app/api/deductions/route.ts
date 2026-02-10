@@ -61,3 +61,17 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ id: created.id });
 }
+
+export async function DELETE(request: Request) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const body = await request.json();
+  if (!body?.id) return NextResponse.json({ message: "id is required." }, { status: 400 });
+
+  const existing = await prisma.manualDeduction.findUnique({ where: { id: body.id } });
+  if (!existing) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+  await prisma.manualDeduction.delete({ where: { id: body.id } });
+  return NextResponse.json({ ok: true });
+}

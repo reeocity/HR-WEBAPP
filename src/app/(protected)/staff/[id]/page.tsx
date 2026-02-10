@@ -18,6 +18,14 @@ type StaffDetail = {
 
 type LatenessLog = { id: string; date: string };
 type AbsenceLog = { id: string; date: string; type: "PERMISSION" | "NO_PERMISSION" };
+type QueryLog = {
+  id: string;
+  date: string;
+  reason: string;
+  surchargeAmount: string | null;
+  penaltyDays: number | null;
+};
+type MealLog = { id: string; date: string; amount: string };
 
 export default function StaffDetailPage() {
   const params = useParams<{ id: string }>();
@@ -39,7 +47,8 @@ export default function StaffDetailPage() {
 
   const [latenessLogs, setLatenessLogs] = useState<LatenessLog[]>([]);
   const [absenceLogs, setAbsenceLogs] = useState<AbsenceLog[]>([]);
-  const [mealLogs, setMealLogs] = useState<{ id: string; date: string; amount: string }[]>([]);
+  const [queryLogs, setQueryLogs] = useState<QueryLog[]>([]);
+  const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -55,6 +64,7 @@ export default function StaffDetailPage() {
         setStaff(data.staff);
         setLatenessLogs(data.latenessLogs ?? []);
         setAbsenceLogs(data.absenceLogs ?? []);
+        setQueryLogs(data.queryLogs ?? []);
         setMealLogs(data.mealTickets ?? []);
       } catch {
         setMessage("Failed to load staff.");
@@ -138,10 +148,87 @@ export default function StaffDetailPage() {
       setMessage(data?.message ?? "Failed to add query.");
       return;
     }
+    setQueryLogs((prev) => [data.log, ...prev]);
     setQueryDate("");
     setQueryReason("");
     setQuerySurcharge("");
     setQueryPenaltyDays("");
+  };
+
+  const deleteLateness = async (logId: string) => {
+    if (!window.confirm("Delete this lateness record?")) return;
+    setMessage(null);
+    const res = await fetch(`/api/staff/${staffId}/lateness`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ logId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data?.message ?? "Failed to delete lateness.");
+      return;
+    }
+    setLatenessLogs((prev) => prev.filter((log) => log.id !== logId));
+  };
+
+  const deleteAbsence = async (logId: string) => {
+    if (!window.confirm("Delete this absence record?")) return;
+    setMessage(null);
+    const res = await fetch(`/api/staff/${staffId}/absence`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ logId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data?.message ?? "Failed to delete absence.");
+      return;
+    }
+    setAbsenceLogs((prev) => prev.filter((log) => log.id !== logId));
+  };
+
+  const deleteQuery = async (logId: string) => {
+    if (!window.confirm("Delete this query record?")) return;
+    setMessage(null);
+    const res = await fetch(`/api/staff/${staffId}/query`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ logId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data?.message ?? "Failed to delete query.");
+      return;
+    }
+    setQueryLogs((prev) => prev.filter((log) => log.id !== logId));
+  };
+
+  const deleteMealTicket = async (logId: string) => {
+    if (!window.confirm("Delete this meal ticket?")) return;
+    setMessage(null);
+    const res = await fetch(`/api/staff/${staffId}/meal-ticket`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ logId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data?.message ?? "Failed to delete meal ticket.");
+      return;
+    }
+    setMealLogs((prev) => prev.filter((log) => log.id !== logId));
+  };
+
+  const deleteStaff = async () => {
+    if (!window.confirm("Delete this staff and all related records?")) return;
+    setMessage(null);
+    const res = await fetch(`/api/staff/${staffId}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data?.message ?? "Failed to delete staff.");
+      return;
+    }
+    router.push("/");
   };
 
   const addMealTicket = async () => {
@@ -213,6 +300,9 @@ export default function StaffDetailPage() {
           <button className="button secondary" onClick={() => router.push(`/payslips/${staffId}`)}>
             View Payslip
           </button>
+          <button className="button secondary" onClick={deleteStaff}>
+            Delete Staff
+          </button>
         </div>
       </section>
 
@@ -253,6 +343,65 @@ export default function StaffDetailPage() {
           <h3>Recent Logs</h3>
           <p className="muted">Lateness: {latenessLogs.length} | Absence: {absenceLogs.length}</p>
         </div>
+
+        <div className="grid grid-2" style={{ gap: "12px", marginTop: "12px" }}>
+          <div>
+            <h4>Lateness Logs</h4>
+            {latenessLogs.length === 0 ? (
+              <p className="muted">No lateness records.</p>
+            ) : (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {latenessLogs.map((log) => (
+                    <tr key={log.id}>
+                      <td>{log.date}</td>
+                      <td>
+                        <button className="button secondary" onClick={() => deleteLateness(log.id)}>
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+          <div>
+            <h4>Absence Logs</h4>
+            {absenceLogs.length === 0 ? (
+              <p className="muted">No absence records.</p>
+            ) : (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {absenceLogs.map((log) => (
+                    <tr key={log.id}>
+                      <td>{log.date}</td>
+                      <td>{log.type}</td>
+                      <td>
+                        <button className="button secondary" onClick={() => deleteAbsence(log.id)}>
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="card">
@@ -278,6 +427,40 @@ export default function StaffDetailPage() {
             <button className="button secondary" onClick={addQuery}>Add Query</button>
           </div>
         </div>
+
+        <div style={{ marginTop: "12px" }}>
+          <h3>Recent Queries</h3>
+          {queryLogs.length === 0 ? (
+            <p className="muted">No queries logged.</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Reason</th>
+                  <th>Surcharge</th>
+                  <th>Penalty Days</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {queryLogs.map((log) => (
+                  <tr key={log.id}>
+                    <td>{log.date}</td>
+                    <td>{log.reason}</td>
+                    <td>{log.surchargeAmount ?? "-"}</td>
+                    <td>{log.penaltyDays ?? "-"}</td>
+                    <td>
+                      <button className="button secondary" onClick={() => deleteQuery(log.id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </section>
 
       <section className="card">
@@ -292,6 +475,34 @@ export default function StaffDetailPage() {
           </div>
         </div>
         <p className="muted" style={{ marginTop: "8px" }}>Total this staff: {mealLogs.length}</p>
+        <div style={{ marginTop: "12px" }}>
+          {mealLogs.length === 0 ? (
+            <p className="muted">No meal tickets.</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mealLogs.map((log) => (
+                  <tr key={log.id}>
+                    <td>{log.date}</td>
+                    <td>{log.amount}</td>
+                    <td>
+                      <button className="button secondary" onClick={() => deleteMealTicket(log.id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </section>
     </div>
   );
