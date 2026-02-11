@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 type LatenessRow = {
   id: string;
   date: string;
+  arrivalTime: string | null;
   staff: {
     id: string;
     staffId: string | null;
@@ -56,6 +57,7 @@ export default function LatenessPage() {
             <thead>
               <tr>
                 <th>Date</th>
+                <th>Time</th>
                 <th>Staff</th>
                 <th>Department</th>
                 <th>Position</th>
@@ -65,6 +67,7 @@ export default function LatenessPage() {
               {logs.map((log) => (
                 <tr key={log.id}>
                   <td>{log.date}</td>
+                  <td>{log.arrivalTime ?? "-"}</td>
                   <td>{log.staff.staffId ?? "-"} — {log.staff.fullName}</td>
                   <td>{log.staff.department}</td>
                   <td>{log.staff.position}</td>

@@ -15,11 +15,18 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     data: {
       staffId: id,
       date: new Date(body.date),
+      arrivalTime: body.arrivalTime ?? null,
       createdById: session.userId,
     },
   });
 
-  return NextResponse.json({ log: { ...log, date: log.date.toISOString().slice(0, 10) } });
+  return NextResponse.json({
+    log: {
+      ...log,
+      date: log.date.toISOString().slice(0, 10),
+      arrivalTime: log.arrivalTime ?? null,
+    },
+  });
 }
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {

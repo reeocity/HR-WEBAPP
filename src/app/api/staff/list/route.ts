@@ -19,10 +19,18 @@ export async function GET() {
       department: true,
       position: true,
       status: true,
+      inactiveReason: true,
+      lastActiveDate: true,
       phone: true,
       resumptionDate: true,
     },
   });
 
-  return NextResponse.json({ staff });
+  return NextResponse.json({
+    staff: staff.map((s) => ({
+      ...s,
+      resumptionDate: s.resumptionDate.toISOString().slice(0, 10),
+      lastActiveDate: s.lastActiveDate ? s.lastActiveDate.toISOString().slice(0, 10) : null,
+    })),
+  });
 }

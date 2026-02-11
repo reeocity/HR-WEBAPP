@@ -26,8 +26,13 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
     staff: {
       ...staff,
       resumptionDate: staff.resumptionDate.toISOString().slice(0, 10),
+      lastActiveDate: staff.lastActiveDate ? staff.lastActiveDate.toISOString().slice(0, 10) : null,
     },
-    latenessLogs: latenessLogs.map((l) => ({ ...l, date: l.date.toISOString().slice(0, 10) })),
+    latenessLogs: latenessLogs.map((l) => ({
+      ...l,
+      date: l.date.toISOString().slice(0, 10),
+      arrivalTime: l.arrivalTime ?? null,
+    })),
     absenceLogs: absenceLogs.map((a) => ({ ...a, date: a.date.toISOString().slice(0, 10) })),
     queryLogs: queryLogs.map((q) => ({ ...q, date: q.date.toISOString().slice(0, 10) })),
     mealTickets: mealTickets.map((m) => ({ ...m, date: m.date.toISOString().slice(0, 10), amount: m.amount.toString() })),
@@ -49,6 +54,8 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       department: body.department,
       position: body.position,
       status: body.status,
+      inactiveReason: body.status === "INACTIVE" ? body.inactiveReason ?? null : null,
+      lastActiveDate: body.status === "INACTIVE" && body.lastActiveDate ? new Date(body.lastActiveDate) : null,
       phone: body.phone,
       resumptionDate: new Date(body.resumptionDate),
     },

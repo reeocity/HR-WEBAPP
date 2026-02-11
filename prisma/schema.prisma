@@ -26,6 +26,8 @@ model Staff {
   position       String
   resumptionDate DateTime @map("resumption_date")
   status         String?  @map("status")
+  inactiveReason InactiveReason? @map("inactive_reason")
+  lastActiveDate DateTime? @map("last_active_date")
   phone          String?  @map("phone")
   bankDetails    String?  @map("bank_details")
   bankName       String?  @map("bank_name")
@@ -39,8 +41,16 @@ model Staff {
   absenceLogs      AbsenceLog[]
   queryLogs        QueryLog[]
   manualDeductions ManualDeduction[]
+  monthlyAllowances MonthlyAllowance[]
   payrollLines     PayrollLine[]
   staffMealTickets StaffMealTicket[]
+}
+
+enum InactiveReason {
+  TERMINATION
+  RESIGNATION
+  AWOL
+  SUSPENSION
 }
 
 model Guarantor {
@@ -76,6 +86,7 @@ model LatenessLog {
   id          String   @id @default(cuid())
   staffId     String   @map("staff_id")
   date        DateTime @map("date")
+  arrivalTime String?  @map("arrival_time")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   createdById String?  @map("created_by")
@@ -145,6 +156,20 @@ model ManualDeduction {
   createdAt   DateTime                @default(now()) @map("created_at")
   updatedAt   DateTime                @updatedAt @map("updated_at")
   createdById String?                 @map("created_by")
+
+  staff Staff @relation(fields: [staffId], references: [id])
+}
+
+model MonthlyAllowance {
+  id          String   @id @default(cuid())
+  staffId     String   @map("staff_id")
+  month       Int      @map("month")
+  year        Int      @map("year")
+  amount      Decimal  @map("amount") @db.Decimal(12, 2)
+  reason      String   @map("reason")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById String?  @map("created_by")
 
   staff Staff @relation(fields: [staffId], references: [id])
 }

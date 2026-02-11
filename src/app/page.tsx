@@ -11,6 +11,8 @@ type StaffRow = {
   department: string | null;
   position: string | null;
   status: string | null;
+  inactiveReason: string | null;
+  lastActiveDate: string | null;
   phone: string | null;
   resumptionDate: string | null;
 };
@@ -50,11 +52,12 @@ export default function StaffListPage() {
   const [isLoadingStaff, setIsLoadingStaff] = useState(false);
   const [staffError, setStaffError] = useState<string | null>(null);
 
-  const [newStaffId, setNewStaffId] = useState("");
   const [newFullName, setNewFullName] = useState("");
   const [newDepartment, setNewDepartment] = useState("");
   const [newPosition, setNewPosition] = useState("");
   const [newStatus, setNewStatus] = useState("ACTIVE");
+  const [newInactiveReason, setNewInactiveReason] = useState("");
+  const [newLastActiveDate, setNewLastActiveDate] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newResumptionDate, setNewResumptionDate] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -77,11 +80,12 @@ export default function StaffListPage() {
   const closeAdd = () => {
     setShowAdd(false);
     setCreateMessage(null);
-    setNewStaffId("");
     setNewFullName("");
     setNewDepartment("");
     setNewPosition("");
     setNewStatus("ACTIVE");
+    setNewInactiveReason("");
+    setNewLastActiveDate("");
     setNewPhone("");
     setNewResumptionDate("");
   };
@@ -174,11 +178,12 @@ export default function StaffListPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          staffId: newStaffId,
           fullName: newFullName,
           department: newDepartment,
           position: newPosition,
           status: newStatus,
+          inactiveReason: newStatus === "INACTIVE" ? newInactiveReason : null,
+          lastActiveDate: newStatus === "INACTIVE" ? newLastActiveDate : null,
           phone: newPhone || null,
           resumptionDate: newResumptionDate,
         }),
@@ -188,8 +193,9 @@ export default function StaffListPage() {
         setCreateMessage(data?.message ?? "Failed to create staff.");
         return;
       }
+      setCreateMessage(`Staff created! ID: ${data.generatedStaffId}`);
       await loadStaff();
-      closeAdd();
+      setTimeout(() => closeAdd(), 2000);
     } catch {
       setCreateMessage("Failed to create staff.");
     } finally {
@@ -341,10 +347,6 @@ export default function StaffListPage() {
 
             <div className="grid grid-2" style={{ marginTop: "16px", gap: "12px" }}>
               <label>
-                <span className="muted">Staff ID</span>
-                <input className="input" value={newStaffId} onChange={(e) => setNewStaffId(e.target.value)} />
-              </label>
-              <label>
                 <span className="muted">Full Name</span>
                 <input className="input" value={newFullName} onChange={(e) => setNewFullName(e.target.value)} />
               </label>
@@ -368,10 +370,46 @@ export default function StaffListPage() {
               </label>
               <label>
                 <span className="muted">Status</span>
-                <select className="select" value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
+                <select
+                  className="select"
+                  value={newStatus}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setNewStatus(value);
+                    if (value !== "INACTIVE") {
+                      setNewInactiveReason("");
+                      setNewLastActiveDate("");
+                    }
+                  }}
+                >
                   <option value="ACTIVE">ACTIVE</option>
                   <option value="INACTIVE">INACTIVE</option>
                 </select>
+              </label>
+              <label>
+                <span className="muted">Inactive Reason</span>
+                <select
+                  className="select"
+                  value={newInactiveReason}
+                  onChange={(e) => setNewInactiveReason(e.target.value)}
+                  disabled={newStatus !== "INACTIVE"}
+                >
+                  <option value="">Select reason</option>
+                  <option value="TERMINATION">TERMINATION</option>
+                  <option value="RESIGNATION">RESIGNATION</option>
+                  <option value="AWOL">AWOL</option>
+                  <option value="SUSPENSION">SUSPENSION</option>
+                </select>
+              </label>
+              <label>
+                <span className="muted">Last Active Day</span>
+                <input
+                  className="input"
+                  type="date"
+                  value={newLastActiveDate}
+                  onChange={(e) => setNewLastActiveDate(e.target.value)}
+                  disabled={newStatus !== "INACTIVE"}
+                />
               </label>
               <label>
                 <span className="muted">Phone</span>
@@ -390,7 +428,14 @@ export default function StaffListPage() {
               <button
                 className="button"
                 onClick={handleCreateStaff}
-                disabled={!newStaffId || !newFullName || !newDepartment || !newPosition || !newResumptionDate || isCreating}
+                disabled={
+                  !newFullName ||
+                  !newDepartment ||
+                  !newPosition ||
+                  !newResumptionDate ||
+                  isCreating ||
+                  (newStatus === "INACTIVE" && (!newInactiveReason || !newLastActiveDate))
+                }
               >
                 {isCreating ? "Creating..." : "Create Staff"}
               </button>

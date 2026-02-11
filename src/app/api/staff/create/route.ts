@@ -10,22 +10,28 @@ export async function POST(request: Request) {
 
   const body = await request.json();
 
-  if (!body.staffId || !body.fullName || !body.department || !body.position || !body.resumptionDate) {
+  if (!body.fullName || !body.department || !body.position || !body.resumptionDate) {
     return NextResponse.json({ message: "Missing required fields." }, { status: 400 });
   }
 
+  const timestamp = Date.now();
+  const randomNum = Math.floor(Math.random() * 100);
+  const staffId = `AUTO-${timestamp}-${randomNum}`;
+
   const staff = await prisma.staff.create({
     data: {
-      staffId: body.staffId,
+      staffId: staffId,
       fullName: body.fullName,
       department: body.department,
       position: body.position,
       status: body.status ?? "ACTIVE",
+      inactiveReason: body.status === "INACTIVE" ? body.inactiveReason ?? null : null,
+      lastActiveDate: body.status === "INACTIVE" && body.lastActiveDate ? new Date(body.lastActiveDate) : null,
       phone: body.phone ?? null,
       resumptionDate: new Date(body.resumptionDate),
       createdById: session.userId,
     },
   });
 
-  return NextResponse.json({ staff });
+  return NextResponse.json({ staff, generatedStaffId: staffId });
 }

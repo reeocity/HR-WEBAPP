@@ -12,11 +12,13 @@ type StaffDetail = {
   department: string;
   position: string;
   status: string | null;
+  inactiveReason: string | null;
+  lastActiveDate: string | null;
   phone: string | null;
   resumptionDate: string;
 };
 
-type LatenessLog = { id: string; date: string };
+type LatenessLog = { id: string; date: string; arrivalTime: string | null };
 type AbsenceLog = { id: string; date: string; type: "PERMISSION" | "NO_PERMISSION" };
 type QueryLog = {
   id: string;
@@ -37,6 +39,7 @@ export default function StaffDetailPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   const [latenessDate, setLatenessDate] = useState("");
+  const [latenessTime, setLatenessTime] = useState("");
   const [absenceDate, setAbsenceDate] = useState("");
   const [absenceType, setAbsenceType] = useState<"PERMISSION" | "NO_PERMISSION">("NO_PERMISSION");
   const [queryDate, setQueryDate] = useState("");
@@ -87,6 +90,8 @@ export default function StaffDetailPage() {
         department: staff.department,
         position: staff.position,
         status: staff.status,
+        inactiveReason: staff.inactiveReason,
+        lastActiveDate: staff.lastActiveDate,
         phone: staff.phone,
         resumptionDate: staff.resumptionDate,
       }),
@@ -104,7 +109,7 @@ export default function StaffDetailPage() {
     const res = await fetch(`/api/staff/${staffId}/lateness`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: latenessDate }),
+      body: JSON.stringify({ date: latenessDate, arrivalTime: latenessTime || null }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -113,6 +118,7 @@ export default function StaffDetailPage() {
     }
     setLatenessLogs((prev) => [data.log, ...prev]);
     setLatenessDate("");
+    setLatenessTime("");
   };
 
   const addAbsence = async () => {
@@ -280,10 +286,47 @@ export default function StaffDetailPage() {
           </label>
           <label>
             <span className="muted">Status</span>
-            <select className="select" value={staff.status ?? "ACTIVE"} onChange={(e) => setStaff({ ...staff, status: e.target.value })}>
+            <select
+              className="select"
+              value={staff.status ?? "ACTIVE"}
+              onChange={(e) => {
+                const value = e.target.value;
+                setStaff({
+                  ...staff,
+                  status: value,
+                  inactiveReason: value === "INACTIVE" ? staff.inactiveReason : null,
+                  lastActiveDate: value === "INACTIVE" ? staff.lastActiveDate : null,
+                });
+              }}
+            >
               <option value="ACTIVE">ACTIVE</option>
               <option value="INACTIVE">INACTIVE</option>
             </select>
+          </label>
+          <label>
+            <span className="muted">Inactive Reason</span>
+            <select
+              className="select"
+              value={staff.inactiveReason ?? ""}
+              onChange={(e) => setStaff({ ...staff, inactiveReason: e.target.value || null })}
+              disabled={(staff.status ?? "ACTIVE") !== "INACTIVE"}
+            >
+              <option value="">Select reason</option>
+              <option value="TERMINATION">TERMINATION</option>
+              <option value="RESIGNATION">RESIGNATION</option>
+              <option value="AWOL">AWOL</option>
+              <option value="SUSPENSION">SUSPENSION</option>
+            </select>
+          </label>
+          <label>
+            <span className="muted">Last Active Day</span>
+            <input
+              className="input"
+              type="date"
+              value={staff.lastActiveDate ?? ""}
+              onChange={(e) => setStaff({ ...staff, lastActiveDate: e.target.value || null })}
+              disabled={(staff.status ?? "ACTIVE") !== "INACTIVE"}
+            />
           </label>
           <label>
             <span className="muted">Phone</span>
@@ -312,6 +355,10 @@ export default function StaffDetailPage() {
           <label>
             <span className="muted">Lateness Date</span>
             <input className="input" type="date" value={latenessDate} onChange={(e) => setLatenessDate(e.target.value)} />
+          </label>
+          <label>
+            <span className="muted">Arrival Time</span>
+            <input className="input" type="time" value={latenessTime} onChange={(e) => setLatenessTime(e.target.value)} />
           </label>
           <div style={{ display: "flex", alignItems: "flex-end" }}>
             <button className="button secondary" onClick={addLateness}>Add Lateness</button>
@@ -354,6 +401,7 @@ export default function StaffDetailPage() {
                 <thead>
                   <tr>
                     <th>Date</th>
+                    <th>Time</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -361,6 +409,7 @@ export default function StaffDetailPage() {
                   {latenessLogs.map((log) => (
                     <tr key={log.id}>
                       <td>{log.date}</td>
+                      <td>{log.arrivalTime ?? "-"}</td>
                       <td>
                         <button className="button secondary" onClick={() => deleteLateness(log.id)}>
                           Delete

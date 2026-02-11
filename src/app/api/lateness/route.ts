@@ -20,6 +20,7 @@ export async function GET() {
     logs: logs.map((l) => ({
       id: l.id,
       date: l.date.toISOString().slice(0, 10),
+      arrivalTime: l.arrivalTime ?? null,
       staff: l.staff,
     })),
   });

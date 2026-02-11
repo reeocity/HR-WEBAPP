@@ -5,9 +5,17 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 
 type PayslipData = {
-  staff: { id: string; staffId: string | null; fullName: string; department: string; position: string };
+  staff: {
+    id: string;
+    staffId: string | null;
+    fullName: string;
+    department: string;
+    position: string;
+    status: string | null;
+    lastActiveDate: string | null;
+  };
   salary: { monthlySalary: string; effectiveFrom: string } | null;
-  lateness: { id: string; date: string }[];
+  lateness: { id: string; date: string; arrivalTime: string | null }[];
   absence: { id: string; date: string; type: "PERMISSION" | "NO_PERMISSION" }[];
   queries: { id: string; date: string; reason: string; surchargeAmount: string | null; penaltyDays: number | null }[];
   manual: { id: string; category: string; amount: string; note: string | null }[];
@@ -97,6 +105,11 @@ export default function PayslipPage() {
               <p><strong>Position:</strong> {data.staff.position}</p>
             </div>
           </div>
+          {data.staff.status === "INACTIVE" ? (
+            <p className="muted" style={{ marginTop: "6px" }}>
+              Status: INACTIVE{data.staff.lastActiveDate ? ` (Last active: ${data.staff.lastActiveDate})` : ""}
+            </p>
+          ) : null}
 
           <div className="divider" />
 
@@ -151,7 +164,7 @@ export default function PayslipPage() {
           {data.lateness.length === 0 ? <p className="muted">None</p> : (
             <ul className="payslip-list">
               {data.lateness.map((l) => (
-                <li key={l.id}>{l.date}</li>
+                <li key={l.id}>{l.date}{l.arrivalTime ? ` — ${l.arrivalTime}` : ""}</li>
               ))}
             </ul>
           )}
