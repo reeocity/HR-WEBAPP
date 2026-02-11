@@ -15,12 +15,15 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
   });
   if (!staff) return NextResponse.json({ message: "Not found" }, { status: 404 });
 
-  const [latenessLogs, absenceLogs, queryLogs, mealTickets] = await Promise.all([
+  const [latenessLogs, absenceLogs, queryLogs, mealTickets, salaryHistory] = await Promise.all([
     prisma.latenessLog.findMany({ where: { staffId: staff.id }, orderBy: { date: "desc" }, take: 20 }),
     prisma.absenceLog.findMany({ where: { staffId: staff.id }, orderBy: { date: "desc" }, take: 20 }),
     prisma.queryLog.findMany({ where: { staffId: staff.id }, orderBy: { date: "desc" }, take: 20 }),
     prisma.staffMealTicket.findMany({ where: { staffId: staff.id }, orderBy: { date: "desc" }, take: 20 }),
+    prisma.salaryHistory.findFirst({ where: { staffId: staff.id }, orderBy: { effectiveFrom: "desc" } }),
   ]);
+
+  const currentSalary = salaryHistory ? Number(salaryHistory.monthlySalary) : 0;
 
   return NextResponse.json({
     staff: {
@@ -28,6 +31,7 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
       resumptionDate: staff.resumptionDate.toISOString().slice(0, 10),
       lastActiveDate: staff.lastActiveDate ? staff.lastActiveDate.toISOString().slice(0, 10) : null,
     },
+    currentSalary,
     latenessLogs: latenessLogs.map((l) => ({
       ...l,
       date: l.date.toISOString().slice(0, 10),

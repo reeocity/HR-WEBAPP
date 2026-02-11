@@ -23,10 +23,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="nav-links">
           <Link href="/">Staff</Link>
+          <Link href="/new-staff">New Staff</Link>
           <Link href="/lateness">Lateness</Link>
           <Link href="/absence">Absence</Link>
           <Link href="/queries">Queries</Link>
           <Link href="/deductions">Manual Deductions</Link>
+          <Link href="/reports/monthly">Monthly Report</Link>
           <Link href="/payroll">Payroll Runs</Link>
         </nav>
         <LogoutButton />

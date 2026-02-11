@@ -19,78 +19,176 @@ export async function GET(request: Request) {
   const start = new Date(year, month - 1, 1);
   const end = new Date(year, month, 1);
 
-  const staffList = await prisma.staff.findMany({
-    orderBy: { fullName: "asc" },
-    select: { id: true, staffId: true, fullName: true, department: true, position: true },
+  // Fetch new staff hired in this month with their salary
+  const newStaffList = await prisma.staff.findMany({
+    where: {
+      resumptionDate: { gte: start, lt: end },
+    },
+    orderBy: { resumptionDate: "asc" },
   });
 
-  const rows = await Promise.all(
-    staffList.map(async (s) => {
+  // Get salary for each new staff
+  const newStaffWithSalary = await Promise.all(
+    newStaffList.map(async (s) => {
       const salary = await prisma.salaryHistory.findFirst({
-        where: { staffId: s.id, effectiveFrom: { lte: end } },
+        where: { staffId: s.id },
         orderBy: { effectiveFrom: "desc" },
       });
-
-      const [lateness, absence, queries, manual] = await Promise.all([
-        prisma.latenessLog.findMany({ where: { staffId: s.id, date: { gte: start, lt: end } } }),
-        prisma.absenceLog.findMany({ where: { staffId: s.id, date: { gte: start, lt: end } } }),
-        prisma.queryLog.findMany({ where: { staffId: s.id, date: { gte: start, lt: end } } }),
-        prisma.manualDeduction.findMany({ where: { staffId: s.id, month, year } }),
-      ]);
-
-      const grossSalary = Number(salary?.monthlySalary ?? 0);
-      const dailySalary = grossSalary / 31;
-
-      const permissionDays = absence.filter((a) => a.type === "PERMISSION").length;
-      const noPermissionDays = absence.filter((a) => a.type === "NO_PERMISSION").length;
-      const absenceDeduction = (permissionDays * dailySalary) + (noPermissionDays * dailySalary * 2);
-
-      const lateDays = lateness.length;
-      let latenessDeductionDays = 0;
-      if (lateDays <= 2) latenessDeductionDays = 0;
-      else if (lateDays <= 4) latenessDeductionDays = 1;
-      else if (lateDays <= 7) latenessDeductionDays = 2;
-      else if (lateDays <= 10) latenessDeductionDays = 3;
-      else if (lateDays <= 15) latenessDeductionDays = 4;
-      else latenessDeductionDays = 5;
-
-      const latenessDeduction = latenessDeductionDays * dailySalary;
-
-      const manualDeductionsTotal = manual.reduce((sum, m) => sum + Number(m.amount || 0), 0);
-      const querySurchargeTotal = queries.reduce((sum, q) => sum + Number(q.surchargeAmount || 0), 0);
-      const queryPenaltyDaysTotal = queries.reduce((sum, q) => sum + Number(q.penaltyDays || 0), 0);
-      const queryPenaltyDeduction = queryPenaltyDaysTotal * dailySalary;
-
-      const totalDeductions =
-        absenceDeduction +
-        latenessDeduction +
-        manualDeductionsTotal +
-        querySurchargeTotal +
-        queryPenaltyDeduction;
-
-      const netSalary = grossSalary - totalDeductions;
-
       return {
+        id: s.id,
         staffId: s.staffId,
         fullName: s.fullName,
         department: s.department,
         position: s.position,
-        grossSalary,
-        totalDeductions,
-        netSalary,
+        resumptionDate: s.resumptionDate.toISOString().slice(0, 10),
+        salary: salary ? Number(salary.monthlySalary) : 0,
       };
     })
   );
 
-  const totals = rows.reduce(
-    (acc, r) => {
-      acc.gross += r.grossSalary;
-      acc.deductions += r.totalDeductions;
-      acc.net += r.netSalary;
-      return acc;
+  // Fetch absence records with staff details
+  const absenceRecords = await prisma.absenceLog.findMany({
+    where: {
+      date: { gte: start, lt: end },
     },
-    { gross: 0, deductions: 0, net: 0 }
-  );
+    include: {
+      staff: { select: { id: true, fullName: true, staffId: true } },
+    },
+    orderBy: { date: "asc" },
+  });
 
-  return NextResponse.json({ month, year, rows, totals });
+  // Fetch lateness records
+  const latenessRecords = await prisma.latenessLog.findMany({
+    where: {
+      date: { gte: start, lt: end },
+    },
+    include: {
+      staff: { select: { id: true, fullName: true, staffId: true } },
+    },
+    orderBy: { date: "asc" },
+  });
+
+  // Fetch queries
+  const queryRecords = await prisma.queryLog.findMany({
+    where: {
+      date: { gte: start, lt: end },
+    },
+    include: {
+      staff: { select: { id: true, fullName: true, staffId: true } },
+    },
+    orderBy: { date: "asc" },
+  });
+
+  // Fetch meal tickets
+  const mealTickets = await prisma.staffMealTicket.findMany({
+    where: {
+      date: { gte: start, lt: end },
+    },
+    include: {
+      staff: { select: { id: true, fullName: true, staffId: true } },
+    },
+    orderBy: { date: "asc" },
+  });
+
+  // Fetch manual deductions
+  const manualDeductions = await prisma.manualDeduction.findMany({
+    where: { month, year },
+    include: {
+      staff: { select: { id: true, fullName: true, staffId: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  // Fetch inactive staff
+  const inactiveStaff = await prisma.staff.findMany({
+    where: { status: "INACTIVE" },
+    select: {
+      id: true,
+      staffId: true,
+      fullName: true,
+      inactiveReason: true,
+      lastActiveDate: true,
+    },
+    orderBy: { lastActiveDate: "desc" },
+  });
+
+  // Fetch allowances
+  const allowances = await prisma.monthlyAllowance.findMany({
+    where: { month, year },
+    include: {
+      staff: { select: { id: true, fullName: true, staffId: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  // Calculate lateness summary (group by staff)
+  const latenessSummary: Record<string, { fullName: string; staffId: string | null; count: number }> = {};
+  latenessRecords.forEach((log) => {
+    const staffKey = log.staffId;
+    if (!latenessSummary[staffKey]) {
+      latenessSummary[staffKey] = {
+        fullName: log.staff.fullName,
+        staffId: log.staff.staffId,
+        count: 0,
+      };
+    }
+    latenessSummary[staffKey].count += 1;
+  });
+
+  // Calculate meal charges summary
+  const mealSummary: Record<string, { fullName: string; staffId: string | null; count: number; total: number }> = {};
+  mealTickets.forEach((ticket) => {
+    const staffKey = ticket.staffId;
+    if (!mealSummary[staffKey]) {
+      mealSummary[staffKey] = {
+        fullName: ticket.staff.fullName,
+        staffId: ticket.staff.staffId,
+        count: 0,
+        total: 0,
+      };
+    }
+    mealSummary[staffKey].count += 1;
+    mealSummary[staffKey].total += Number(ticket.amount || 0);
+  });
+
+  return NextResponse.json({
+    month,
+    year,
+    newStaff: newStaffWithSalary,
+    absenceRecords: absenceRecords.map((a) => ({
+      staffName: a.staff.fullName,
+      staffId: a.staff.staffId,
+      date: a.date.toISOString().slice(0, 10),
+      type: a.type,
+    })),
+    latenessSummary: Object.values(latenessSummary),
+    queries: queryRecords.map((q) => ({
+      staffName: q.staff.fullName,
+      staffId: q.staff.staffId,
+      date: q.date.toISOString().slice(0, 10),
+      reason: q.reason,
+      surcharge: q.surchargeAmount?.toString() ?? "0",
+      penaltyDays: q.penaltyDays ?? 0,
+    })),
+    mealSummary: Object.values(mealSummary),
+    manualDeductions: manualDeductions.map((m) => ({
+      staffName: m.staff.fullName,
+      staffId: m.staff.staffId,
+      category: m.category,
+      amount: m.amount.toString(),
+      note: m.note,
+    })),
+    inactiveStaff: inactiveStaff.map((s) => ({
+      staffId: s.staffId,
+      fullName: s.fullName,
+      reason: s.inactiveReason,
+      lastActiveDate: s.lastActiveDate ? s.lastActiveDate.toISOString().slice(0, 10) : null,
+    })),
+    allowances: allowances.map((a) => ({
+      staffName: a.staff.fullName,
+      staffId: a.staff.staffId,
+      reason: a.reason,
+      amount: a.amount.toString(),
+    })),
+  });
 }

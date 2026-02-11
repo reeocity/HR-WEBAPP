@@ -37,6 +37,7 @@ type PayslipData = {
     waterRate: number;
     oldStaffStatutory: number;
     defaultChargesTotal: number;
+    newStaffStatutory: number;
     netSalary: number;
   };
 };
@@ -86,6 +87,7 @@ export default function PayslipPage() {
   const waterRate = data?.totals.waterRate ?? 0;
   const oldStaffStatutory = data?.totals.oldStaffStatutory ?? 0;
   const defaultChargesTotal = data?.totals.defaultChargesTotal ?? 0;
+  const newStaffStatutory = data?.totals.newStaffStatutory ?? 0;
 
   return (
     <section className="card payslip-card">
@@ -159,6 +161,13 @@ export default function PayslipPage() {
 
             <div className="label">Old Staff Statutory</div>
             <div>-{formatNaira(oldStaffStatutory)}</div>
+
+            {newStaffStatutory > 0 && (
+              <>
+                <div className="label">New Staff Statutory (25%)</div>
+                <div>-{formatNaira(newStaffStatutory)}</div>
+              </>
+            )}
 
             <div className="label">Allowances</div>
             <div>+{formatNaira(allowancesTotal)}</div>

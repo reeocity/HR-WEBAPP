@@ -19,7 +19,7 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
 
   const staff = await prisma.staff.findUnique({
     where: { id: staffId },
-    select: { id: true, staffId: true, fullName: true, department: true, position: true, status: true, lastActiveDate: true },
+    select: { id: true, staffId: true, fullName: true, department: true, position: true, status: true, lastActiveDate: true, resumptionDate: true },
   });
   if (!staff) return NextResponse.json({ message: "Staff not found." }, { status: 404 });
 
@@ -72,10 +72,21 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
 
   const mealTicketTotal = mealTickets.reduce((sum, m) => sum + Number(m.amount || 0), 0);
 
-  // Default charges applied to all staff
+  // New staff statutory charge: 25% for first 2 months
+  let newStaffStatutory = 0;
+  const resumptionDate = new Date(staff.resumptionDate);
+  const currentMonthStart = new Date(year, month - 1, 1);
+  const monthsDiff = (currentMonthStart.getFullYear() - resumptionDate.getFullYear()) * 12 + (currentMonthStart.getMonth() - resumptionDate.getMonth());
+  
+  // Apply 25% charge if staff is in their first or second month of employment
+  if (monthsDiff <= 1) {
+    newStaffStatutory = grossSalary * 0.25;
+  }
+
+  // Default charges applied to all staff (but not to new staff in first 2 months)
   const bankCharges = 50;
   const waterRate = 150;
-  const oldStaffStatutory = grossSalary >= 60000 ? 1000 : 500;
+  const oldStaffStatutory = (monthsDiff > 1) ? (grossSalary >= 60000 ? 1000 : 500) : 0;
   const defaultChargesTotal = bankCharges + waterRate + oldStaffStatutory;
 
   const netSalary =
@@ -86,7 +97,8 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
     querySurchargeTotal -
     queryPenaltyDeduction -
     mealTicketTotal -
-    defaultChargesTotal +
+    defaultChargesTotal -
+    newStaffStatutory +
     allowancesTotal;
 
   return NextResponse.json({
@@ -141,6 +153,7 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
       waterRate,
       oldStaffStatutory,
       defaultChargesTotal,
+      newStaffStatutory,
       netSalary,
     },
   });

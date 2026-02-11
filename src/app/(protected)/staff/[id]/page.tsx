@@ -50,6 +50,8 @@ export default function StaffDetailPage() {
   const [mealDate, setMealDate] = useState("");
   const [allowanceAmount, setAllowanceAmount] = useState("");
   const [allowanceReason, setAllowanceReason] = useState("");
+  const [monthlySalary, setMonthlySalary] = useState("");
+  const [editingSalary, setEditingSalary] = useState(false);
 
   const [latenessLogs, setLatenessLogs] = useState<LatenessLog[]>([]);
   const [absenceLogs, setAbsenceLogs] = useState<AbsenceLog[]>([]);
@@ -73,6 +75,11 @@ export default function StaffDetailPage() {
         setAbsenceLogs(data.absenceLogs ?? []);
         setQueryLogs(data.queryLogs ?? []);
         setMealLogs(data.mealTickets ?? []);
+
+        // Load current salary
+        if (data.currentSalary) {
+          setMonthlySalary(data.currentSalary.toString());
+        }
 
         // Load allowances for current month
         const now = new Date();
@@ -114,6 +121,26 @@ export default function StaffDetailPage() {
       return;
     }
     setMessage("Staff updated.");
+  };
+
+  const updateSalary = async () => {
+    if (!monthlySalary || Number(monthlySalary) <= 0) {
+      setMessage("Invalid salary amount.");
+      return;
+    }
+    setMessage(null);
+    const res = await fetch(`/api/staff/${staffId}/salary`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ salary: Number(monthlySalary) }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data?.message ?? "Failed to update salary.");
+      return;
+    }
+    setMessage("Salary updated.");
+    setEditingSalary(false);
   };
 
   const addLateness = async () => {
@@ -408,6 +435,31 @@ export default function StaffDetailPage() {
             Delete Staff
           </button>
         </div>
+      </section>
+
+      <section className="card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h2>Monthly Salary</h2>
+          {!editingSalary && (
+            <button className="button secondary" onClick={() => setEditingSalary(true)}>
+              Edit
+            </button>
+          )}
+        </div>
+        {editingSalary ? (
+          <div className="grid grid-2" style={{ gap: "12px", marginTop: "12px" }}>
+            <label>
+              <span className="muted">Monthly Salary</span>
+              <input className="input" type="number" value={monthlySalary} onChange={(e) => setMonthlySalary(e.target.value)} />
+            </label>
+            <div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>
+              <button className="button" onClick={updateSalary}>Save</button>
+              <button className="button secondary" onClick={() => setEditingSalary(false)}>Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <p style={{ marginTop: "12px", fontSize: "18px", fontWeight: "500" }}>₦{Number(monthlySalary).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</p>
+        )}
       </section>
 
       <section className="card">

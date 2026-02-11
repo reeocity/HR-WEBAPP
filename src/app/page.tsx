@@ -60,6 +60,7 @@ export default function StaffListPage() {
   const [newLastActiveDate, setNewLastActiveDate] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newResumptionDate, setNewResumptionDate] = useState("");
+  const [newSalary, setNewSalary] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [createMessage, setCreateMessage] = useState<string | null>(null);
 
@@ -88,6 +89,7 @@ export default function StaffListPage() {
     setNewLastActiveDate("");
     setNewPhone("");
     setNewResumptionDate("");
+    setNewSalary("");
   };
 
   const loadStaff = async () => {
@@ -186,6 +188,7 @@ export default function StaffListPage() {
           lastActiveDate: newStatus === "INACTIVE" ? newLastActiveDate : null,
           phone: newPhone || null,
           resumptionDate: newResumptionDate,
+          salary: newSalary ? Number(newSalary) : null,
         }),
       });
       const data = await res.json();
@@ -418,6 +421,10 @@ export default function StaffListPage() {
               <label>
                 <span className="muted">Resumption Date</span>
                 <input className="input" type="date" value={newResumptionDate} onChange={(e) => setNewResumptionDate(e.target.value)} />
+              </label>
+              <label>
+                <span className="muted">Monthly Salary</span>
+                <input className="input" type="number" placeholder="e.g., 150000" value={newSalary} onChange={(e) => setNewSalary(e.target.value)} />
               </label>
             </div>
 

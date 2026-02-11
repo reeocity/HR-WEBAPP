@@ -33,5 +33,16 @@ export async function POST(request: Request) {
     },
   });
 
+  // If salary is provided, create a SalaryHistory record
+  if (body.salary && body.salary > 0) {
+    await prisma.salaryHistory.create({
+      data: {
+        staffId: staff.id,
+        monthlySalary: body.salary,
+        effectiveFrom: new Date(),
+      },
+    });
+  }
+
   return NextResponse.json({ staff, generatedStaffId: staffId });
 }
