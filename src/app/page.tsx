@@ -59,6 +59,7 @@ export default function StaffListPage() {
   const [newInactiveReason, setNewInactiveReason] = useState("");
   const [newLastActiveDate, setNewLastActiveDate] = useState("");
   const [newPhone, setNewPhone] = useState("");
+  const [newAccountNumber, setNewAccountNumber] = useState("");
   const [newResumptionDate, setNewResumptionDate] = useState("");
   const [newSalary, setNewSalary] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -88,6 +89,7 @@ export default function StaffListPage() {
     setNewInactiveReason("");
     setNewLastActiveDate("");
     setNewPhone("");
+    setNewAccountNumber("");
     setNewResumptionDate("");
     setNewSalary("");
   };
@@ -187,6 +189,7 @@ export default function StaffListPage() {
           inactiveReason: newStatus === "INACTIVE" ? newInactiveReason : null,
           lastActiveDate: newStatus === "INACTIVE" ? newLastActiveDate : null,
           phone: newPhone || null,
+          accountNumber: newAccountNumber || null,
           resumptionDate: newResumptionDate,
           salary: newSalary ? Number(newSalary) : null,
         }),
@@ -417,6 +420,10 @@ export default function StaffListPage() {
               <label>
                 <span className="muted">Phone</span>
                 <input className="input" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} />
+              </label>
+              <label>
+                <span className="muted">Account Number</span>
+                <input className="input" placeholder="e.g., 0123456789" value={newAccountNumber} onChange={(e) => setNewAccountNumber(e.target.value)} />
               </label>
               <label>
                 <span className="muted">Resumption Date</span>

@@ -41,20 +41,49 @@ export async function GET(request: Request) {
         department: s.department,
         position: s.position,
         resumptionDate: s.resumptionDate.toISOString().slice(0, 10),
+        accountNumber: s.accountNumber || null,
         salary: salary ? Number(salary.monthlySalary) : 0,
       };
     })
   );
 
-  // Fetch absence records with staff details
+  // Fetch absence records with staff details - SPLIT by type
   const absenceRecords = await prisma.absenceLog.findMany({
     where: {
       date: { gte: start, lt: end },
+      type: "NO_PERMISSION",
     },
     include: {
       staff: { select: { id: true, fullName: true, staffId: true } },
     },
     orderBy: { date: "asc" },
+  });
+
+  // Fetch permission absence records (PERMISSION type)
+  const permissionAbsences = await prisma.absenceLog.findMany({
+    where: {
+      date: { gte: start, lt: end },
+      type: "PERMISSION",
+    },
+    include: {
+      staff: { select: { id: true, fullName: true, staffId: true, department: true } },
+    },
+    orderBy: { date: "asc" },
+  });
+
+  // Group permission absences by staff (count days)
+  const permissionAbsenceSummary: Record<string, { fullName: string; staffId: string | null; department: string; count: number }> = {};
+  permissionAbsences.forEach((absence) => {
+    const staffKey = absence.staffId;
+    if (!permissionAbsenceSummary[staffKey]) {
+      permissionAbsenceSummary[staffKey] = {
+        fullName: absence.staff.fullName,
+        staffId: absence.staff.staffId,
+        department: absence.staff.department,
+        count: 0,
+      };
+    }
+    permissionAbsenceSummary[staffKey].count += 1;
   });
 
   // Fetch lateness records
@@ -164,6 +193,7 @@ export async function GET(request: Request) {
       date: a.date.toISOString().slice(0, 10),
       type: a.type,
     })),
+    permissionAbsences: Object.values(permissionAbsenceSummary),
     latenessSummary: filteredLatenessSummary,
     queries: queryRecords.map((q) => ({
       staffName: q.staff.fullName,

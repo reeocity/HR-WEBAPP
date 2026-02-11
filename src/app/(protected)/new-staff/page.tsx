@@ -37,12 +37,12 @@ export default function NewStaffPage() {
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
         const recentStaff = data.staff
-          .filter((s: any) => new Date(s.resumptionDate) >= thirtyDaysAgo)
-          .sort((a: any, b: any) => new Date(b.resumptionDate).getTime() - new Date(a.resumptionDate).getTime());
+          .filter((s: NewStaffMember) => new Date(s.resumptionDate) >= thirtyDaysAgo)
+          .sort((a: NewStaffMember, b: NewStaffMember) => new Date(b.resumptionDate).getTime() - new Date(a.resumptionDate).getTime());
 
         // Fetch salary for each staff
         const staffWithSalary = await Promise.all(
-          recentStaff.map(async (s: any) => {
+          recentStaff.map(async (s: NewStaffMember) => {
             try {
               const salaryRes = await fetch(`/api/staff/${s.id}`);
               const salaryData = await salaryRes.json();
@@ -56,7 +56,7 @@ export default function NewStaffPage() {
         );
 
         setNewStaff(staffWithSalary);
-      } catch (e) {
+      } catch {
         setMessage("Failed to load new staff.");
       } finally {
         setIsLoading(false);

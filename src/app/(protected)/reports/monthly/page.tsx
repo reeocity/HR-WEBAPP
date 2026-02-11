@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 type ReportData = {
   month: number;
   year: number;
-  newStaff: Array<{ id: string; staffId: string | null; fullName: string; department: string; position: string; resumptionDate: string; salary: number }>;
+  newStaff: Array<{ id: string; staffId: string | null; fullName: string; department: string; position: string; resumptionDate: string; accountNumber: string | null; salary: number }>;
   absenceRecords: Array<{ staffName: string; staffId: string | null; date: string; type: string }>;
+  permissionAbsences: Array<{ fullName: string; staffId: string | null; department: string; count: number }>;
   latenessSummary: Array<{ fullName: string; staffId: string | null; count: number }>;
   queries: Array<{ staffName: string; staffId: string | null; date: string; reason: string; surcharge: string; penaltyDays: number }>;
   mealSummary: Array<{ fullName: string; staffId: string | null; count: number; total: number }>;
@@ -95,6 +96,7 @@ export default function MonthlyReportPage() {
                     <th>Full Name</th>
                     <th>Department</th>
                     <th>Position</th>
+                    <th>Account Number</th>
                     <th>Resumption Date</th>
                     <th>Monthly Salary</th>
                   </tr>
@@ -106,8 +108,36 @@ export default function MonthlyReportPage() {
                       <td>{s.fullName}</td>
                       <td>{s.department}</td>
                       <td>{s.position}</td>
+                      <td>{s.accountNumber ?? "-"}</td>
                       <td>{s.resumptionDate}</td>
                       <td>{formatNaira(s.salary)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          )}
+
+          {/* Permission Absences Section */}
+          {data.permissionAbsences.length > 0 && (
+            <section className="card">
+              <h2>Permission/No of Days ({data.permissionAbsences.length})</h2>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Staff ID</th>
+                    <th>Staff Name</th>
+                    <th>Department</th>
+                    <th>No. of Days</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.permissionAbsences.map((p, i) => (
+                    <tr key={i}>
+                      <td>{p.staffId ?? "-"}</td>
+                      <td>{p.fullName}</td>
+                      <td>{p.department}</td>
+                      <td>{p.count}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -28,6 +28,7 @@ export async function POST(request: Request) {
       inactiveReason: body.status === "INACTIVE" ? body.inactiveReason ?? null : null,
       lastActiveDate: body.status === "INACTIVE" && body.lastActiveDate ? new Date(body.lastActiveDate) : null,
       phone: body.phone ?? null,
+      accountNumber: body.accountNumber ?? null,
       resumptionDate: new Date(body.resumptionDate),
       createdById: session.userId,
     },
