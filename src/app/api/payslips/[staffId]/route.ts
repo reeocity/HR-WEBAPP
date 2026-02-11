@@ -31,7 +31,7 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
     orderBy: { effectiveFrom: "desc" },
   });
 
-  const [lateness, absence, queries, manual, mealTickets] = await Promise.all([
+  const [lateness, absence, queries, manual, mealTickets, allowances] = await Promise.all([
     prisma.latenessLog.findMany({ where: { staffId, date: { gte: start, lt: end } }, orderBy: { date: "asc" } }),
     prisma.absenceLog.findMany({ where: { staffId, date: { gte: start, lt: end } }, orderBy: { date: "asc" } }),
     prisma.queryLog.findMany({ where: { staffId, date: { gte: start, lt: end } }, orderBy: { date: "asc" } }),
@@ -72,6 +72,12 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
 
   const mealTicketTotal = mealTickets.reduce((sum, m) => sum + Number(m.amount || 0), 0);
 
+  // Default charges applied to all staff
+  const bankCharges = 50;
+  const waterRate = 150;
+  const oldStaffStatutory = grossSalary >= 60000 ? 1000 : 500;
+  const defaultChargesTotal = bankCharges + waterRate + oldStaffStatutory;
+
   const netSalary =
     grossSalary -
     absenceDeduction -
@@ -79,7 +85,8 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
     manualDeductionsTotal -
     querySurchargeTotal -
     queryPenaltyDeduction -
-    mealTicketTotal +
+    mealTicketTotal -
+    defaultChargesTotal +
     allowancesTotal;
 
   return NextResponse.json({
@@ -130,6 +137,10 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
       queryPenaltyDaysTotal,
       queryPenaltyDeduction,
       mealTicketTotal,
+      bankCharges,
+      waterRate,
+      oldStaffStatutory,
+      defaultChargesTotal,
       netSalary,
     },
   });

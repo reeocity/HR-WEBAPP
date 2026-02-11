@@ -19,6 +19,7 @@ type PayslipData = {
   absence: { id: string; date: string; type: "PERMISSION" | "NO_PERMISSION" }[];
   queries: { id: string; date: string; reason: string; surchargeAmount: string | null; penaltyDays: number | null }[];
   manual: { id: string; category: string; amount: string; note: string | null }[];
+  allowances: { id: string; reason: string; amount: string }[];
   mealTickets: { id: string; date: string; amount: string }[];
   totals: {
     grossSalary: number;
@@ -27,10 +28,15 @@ type PayslipData = {
     latenessDeductionDays: number;
     latenessDeduction: number;
     manualDeductionsTotal: number;
+    allowancesTotal: number;
     querySurchargeTotal: number;
     queryPenaltyDaysTotal: number;
     queryPenaltyDeduction: number;
     mealTicketTotal: number;
+    bankCharges: number;
+    waterRate: number;
+    oldStaffStatutory: number;
+    defaultChargesTotal: number;
     netSalary: number;
   };
 };
@@ -44,6 +50,10 @@ export default function PayslipPage() {
   const [year, setYear] = useState(now.getFullYear());
   const [data, setData] = useState<PayslipData | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  const formatNaira = (amount: number) => {
+    return '₦' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
 
   const load = useCallback(async () => {
     setMessage(null);
@@ -71,6 +81,11 @@ export default function PayslipPage() {
   const queryPenaltyDaysTotal = data?.totals.queryPenaltyDaysTotal ?? 0;
   const queryPenaltyDeduction = data?.totals.queryPenaltyDeduction ?? 0;
   const mealTicketTotal = data?.totals.mealTicketTotal ?? 0;
+  const allowancesTotal = data?.totals.allowancesTotal ?? 0;
+  const bankCharges = data?.totals.bankCharges ?? 0;
+  const waterRate = data?.totals.waterRate ?? 0;
+  const oldStaffStatutory = data?.totals.oldStaffStatutory ?? 0;
+  const defaultChargesTotal = data?.totals.defaultChargesTotal ?? 0;
 
   return (
     <section className="card payslip-card">
@@ -116,28 +131,40 @@ export default function PayslipPage() {
           <h3>Salary Summary</h3>
           <div className="payslip-summary">
             <div className="label">Gross Monthly Salary</div>
-            <div>{grossSalary.toFixed(2)}</div>
+            <div>{formatNaira(grossSalary)}</div>
 
             <div className="label">Absence Deduction</div>
-            <div>-{absenceDeduction.toFixed(2)}</div>
+            <div>-{formatNaira(absenceDeduction)}</div>
 
             <div className="label">Lateness Deduction ({latenessDeductionDays} day)</div>
-            <div>-{latenessDeduction.toFixed(2)}</div>
+            <div>-{formatNaira(latenessDeduction)}</div>
 
             <div className="label">Manual Deductions</div>
-            <div>-{manualDeductionsTotal.toFixed(2)}</div>
+            <div>-{formatNaira(manualDeductionsTotal)}</div>
 
             <div className="label">Query Surcharges</div>
-            <div>-{querySurchargeTotal.toFixed(2)}</div>
+            <div>-{formatNaira(querySurchargeTotal)}</div>
 
             <div className="label">Query Penalty Days ({queryPenaltyDaysTotal} day)</div>
-            <div>-{queryPenaltyDeduction.toFixed(2)}</div>
+            <div>-{formatNaira(queryPenaltyDeduction)}</div>
 
             <div className="label">Meal Tickets</div>
-            <div>-{mealTicketTotal.toFixed(2)}</div>
+            <div>-{formatNaira(mealTicketTotal)}</div>
+
+            <div className="label">Bank Charges</div>
+            <div>-{formatNaira(bankCharges)}</div>
+
+            <div className="label">Water Rate</div>
+            <div>-{formatNaira(waterRate)}</div>
+
+            <div className="label">Old Staff Statutory</div>
+            <div>-{formatNaira(oldStaffStatutory)}</div>
+
+            <div className="label">Allowances</div>
+            <div>+{formatNaira(allowancesTotal)}</div>
 
             <div className="label"><strong>Net Salary</strong></div>
-            <div><strong>{netSalary.toFixed(2)}</strong></div>
+            <div><strong>{formatNaira(netSalary)}</strong></div>
           </div>
 
           <div className="divider" />
@@ -146,7 +173,7 @@ export default function PayslipPage() {
           {data.queries.length === 0 ? <p className="muted">None</p> : (
             <ul className="payslip-list">
               {data.queries.map((q) => (
-                <li key={q.id}>{q.date}: {q.reason} (Surcharge: {q.surchargeAmount ?? "-"}, Penalty Days: {q.penaltyDays ?? "-"})</li>
+                <li key={q.id}>{q.date}: {q.reason} (Surcharge: {q.surchargeAmount ? formatNaira(Number(q.surchargeAmount)) : "-"}, Penalty Days: {q.penaltyDays ?? "-"})</li>
               ))}
             </ul>
           )}
@@ -173,7 +200,16 @@ export default function PayslipPage() {
           {data.manual.length === 0 ? <p className="muted">None</p> : (
             <ul className="payslip-list">
               {data.manual.map((m) => (
-                <li key={m.id}>{m.category}: {m.amount} {m.note ? `— ${m.note}` : ""}</li>
+                <li key={m.id}>{m.category}: {formatNaira(Number(m.amount))} {m.note ? `— ${m.note}` : ""}</li>
+              ))}
+            </ul>
+          )}
+
+          <h3>Allowances</h3>
+          {data.allowances.length === 0 ? <p className="muted">None</p> : (
+            <ul className="payslip-list">
+              {data.allowances.map((a) => (
+                <li key={a.id}>{a.reason}: {formatNaira(Number(a.amount))}</li>
               ))}
             </ul>
           )}
@@ -182,7 +218,7 @@ export default function PayslipPage() {
           {data.mealTickets.length === 0 ? <p className="muted">None</p> : (
             <ul className="payslip-list">
               {data.mealTickets.map((m) => (
-                <li key={m.id}>{m.date}: ₦{m.amount}</li>
+                <li key={m.id}>{m.date}: {formatNaira(Number(m.amount))}</li>
               ))}
             </ul>
           )}

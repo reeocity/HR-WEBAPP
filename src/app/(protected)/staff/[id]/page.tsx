@@ -28,6 +28,7 @@ type QueryLog = {
   penaltyDays: number | null;
 };
 type MealLog = { id: string; date: string; amount: string };
+type Allowance = { id: string; reason: string; amount: string };
 
 export default function StaffDetailPage() {
   const params = useParams<{ id: string }>();
@@ -47,11 +48,14 @@ export default function StaffDetailPage() {
   const [querySurcharge, setQuerySurcharge] = useState("");
   const [queryPenaltyDays, setQueryPenaltyDays] = useState("");
   const [mealDate, setMealDate] = useState("");
+  const [allowanceAmount, setAllowanceAmount] = useState("");
+  const [allowanceReason, setAllowanceReason] = useState("");
 
   const [latenessLogs, setLatenessLogs] = useState<LatenessLog[]>([]);
   const [absenceLogs, setAbsenceLogs] = useState<AbsenceLog[]>([]);
   const [queryLogs, setQueryLogs] = useState<QueryLog[]>([]);
   const [mealLogs, setMealLogs] = useState<MealLog[]>([]);
+  const [allowances, setAllowances] = useState<Allowance[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -69,6 +73,14 @@ export default function StaffDetailPage() {
         setAbsenceLogs(data.absenceLogs ?? []);
         setQueryLogs(data.queryLogs ?? []);
         setMealLogs(data.mealTickets ?? []);
+
+        // Load allowances for current month
+        const now = new Date();
+        const allowRes = await fetch(`/api/allowances?staffId=${staffId}&month=${now.getMonth() + 1}&year=${now.getFullYear()}`);
+        const allowData = await allowRes.json();
+        if (allowRes.ok) {
+          setAllowances(allowData.allowances ?? []);
+        }
       } catch {
         setMessage("Failed to load staff.");
       } finally {
@@ -251,6 +263,55 @@ export default function StaffDetailPage() {
     }
     setMealLogs((prev) => [data.log, ...prev]);
     setMealDate("");
+  };
+
+  const addAllowance = async () => {
+    if (!allowanceAmount || !allowanceReason) return;
+    const now = new Date();
+    const res = await fetch("/api/allowances", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        staffId,
+        month: now.getMonth() + 1,
+        year: now.getFullYear(),
+        amount: Number(allowanceAmount),
+        reason: allowanceReason,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data?.message ?? "Failed to add allowance.");
+      return;
+    }
+    if (data.allowance) {
+      setAllowances((prev) => [
+        {
+          id: data.allowance.id,
+          reason: data.allowance.reason,
+          amount: data.allowance.amount.toString(),
+        },
+        ...prev,
+      ]);
+    }
+    setAllowanceAmount("");
+    setAllowanceReason("");
+  };
+
+  const deleteAllowance = async (allowanceId: string) => {
+    if (!window.confirm("Delete this allowance?")) return;
+    setMessage(null);
+    const res = await fetch("/api/allowances", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: allowanceId }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data?.message ?? "Failed to delete allowance.");
+      return;
+    }
+    setAllowances((prev) => prev.filter((a) => a.id !== allowanceId));
   };
 
   if (isLoading || !staff) {
@@ -543,6 +604,63 @@ export default function StaffDetailPage() {
                     <td>{log.amount}</td>
                     <td>
                       <button className="button secondary" onClick={() => deleteMealTicket(log.id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
+
+      <section className="card">
+        <h2>Monthly Allowances (Add to Net Salary)</h2>
+        <div className="grid grid-3" style={{ gap: "12px", marginTop: "12px" }}>
+          <label>
+            <span className="muted">Amount</span>
+            <input
+              className="input"
+              type="number"
+              value={allowanceAmount}
+              onChange={(e) => setAllowanceAmount(e.target.value)}
+              placeholder="0"
+            />
+          </label>
+          <label>
+            <span className="muted">Reason</span>
+            <input
+              className="input"
+              value={allowanceReason}
+              onChange={(e) => setAllowanceReason(e.target.value)}
+              placeholder="e.g. Leave allowance, Refund"
+            />
+          </label>
+          <div style={{ display: "flex", alignItems: "flex-end" }}>
+            <button className="button secondary" onClick={addAllowance}>Add Allowance</button>
+          </div>
+        </div>
+        <p className="muted" style={{ marginTop: "8px" }}>Total this month: {allowances.length} allowance(s)</p>
+        <div style={{ marginTop: "12px" }}>
+          {allowances.length === 0 ? (
+            <p className="muted">No allowances this month.</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Reason</th>
+                  <th>Amount</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allowances.map((allowance) => (
+                  <tr key={allowance.id}>
+                    <td>{allowance.reason}</td>
+                    <td>{allowance.amount}</td>
+                    <td>
+                      <button className="button secondary" onClick={() => deleteAllowance(allowance.id)}>
                         Delete
                       </button>
                     </td>

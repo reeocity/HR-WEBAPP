@@ -57,7 +57,13 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ id: created.id });
+  return NextResponse.json({
+    allowance: {
+      id: created.id,
+      reason: created.reason,
+      amount: created.amount.toString(),
+    },
+  });
 }
 
 export async function DELETE(request: Request) {
