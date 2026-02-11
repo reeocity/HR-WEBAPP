@@ -121,7 +121,7 @@ export async function GET(request: Request) {
     orderBy: { createdAt: "asc" },
   });
 
-  // Calculate lateness summary (group by staff)
+  // Calculate lateness summary (group by staff) - only include staff with 3+ lateness
   const latenessSummary: Record<string, { fullName: string; staffId: string | null; count: number }> = {};
   latenessRecords.forEach((log) => {
     const staffKey = log.staffId;
@@ -134,6 +134,9 @@ export async function GET(request: Request) {
     }
     latenessSummary[staffKey].count += 1;
   });
+
+  // Filter to only include staff with 3 or more lateness records (who have penalties)
+  const filteredLatenessSummary = Object.values(latenessSummary).filter((l) => l.count >= 3);
 
   // Calculate meal charges summary
   const mealSummary: Record<string, { fullName: string; staffId: string | null; count: number; total: number }> = {};
@@ -161,7 +164,7 @@ export async function GET(request: Request) {
       date: a.date.toISOString().slice(0, 10),
       type: a.type,
     })),
-    latenessSummary: Object.values(latenessSummary),
+    latenessSummary: filteredLatenessSummary,
     queries: queryRecords.map((q) => ({
       staffName: q.staff.fullName,
       staffId: q.staff.staffId,
