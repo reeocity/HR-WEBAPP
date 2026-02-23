@@ -260,17 +260,18 @@ model StaffMealTicket {
 }
 
 model LeaveSchedule {
-  id          String   @id @default(cuid())
-  staffId     String   @map("staff_id")
-  year        Int      @map("year")
-  month       Int      @map("month")
-  startDate   DateTime @map("start_date")
-  endDate     DateTime @map("end_date")
-  days        Int      @map("days")
-  notes       String?  @map("notes")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  createdById String?  @map("created_by")
+  id            String   @id @default(cuid())
+  staffId       String   @map("staff_id")
+  year          Int      @map("year")
+  month         Int      @map("month")
+  startDate     DateTime @map("start_date")
+  endDate       DateTime @map("end_date")
+  resumptionDate DateTime @map("resumption_date")
+  days          Int      @map("days")
+  notes         String?  @map("notes")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdById   String?  @map("created_by")
 
   staff Staff @relation(fields: [staffId], references: [id])
 

@@ -153,6 +153,64 @@ export default function PayrollRunsPage() {
     }
   };
 
+  const deletePayroll = async (runId: string) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to DELETE this DRAFT payroll run?\n\nThis action cannot be undone."
+      )
+    )
+      return;
+    setIsLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/payroll/runs/${runId}/delete`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data?.message ?? "Failed to delete payroll.");
+        return;
+      }
+      setMessage("Payroll deleted successfully!");
+      await loadPayrollRuns();
+      setSelectedRun(null);
+    } catch {
+      setMessage("Failed to delete payroll.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const rejectPayroll = async (runId: string) => {
+    if (
+      !window.confirm(
+        "Reject this APPROVED payroll run?\n\nIt will be reverted to DRAFT status for modifications."
+      )
+    )
+      return;
+    setIsLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/payroll/runs/${runId}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data?.message ?? "Failed to reject payroll.");
+        return;
+      }
+      setMessage("Payroll rejected and reverted to DRAFT!");
+      await loadPayrollRuns();
+      setSelectedRun(null);
+    } catch {
+      setMessage("Failed to reject payroll.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div style={{ gap: "24px", display: "flex", flexDirection: "column" }}>
       <section className="card">
@@ -311,18 +369,34 @@ export default function PayrollRunsPage() {
 
           {/* Action Buttons */}
           {selectedRun.status === "DRAFT" && (
-            <div style={{ display: "flex", gap: "8px", marginTop: "20px" }}>
+            <div style={{ display: "flex", gap: "8px", marginTop: "20px", flexWrap: "wrap" }}>
               <button className="button" onClick={() => approvePayroll(selectedRun.id)} disabled={isLoading}>
                 Approve Payroll
+              </button>
+              <button
+                className="button secondary"
+                onClick={() => deletePayroll(selectedRun.id)}
+                disabled={isLoading}
+                style={{ borderColor: "#dc2626", color: "#dc2626" }}
+              >
+                🗑️ Delete
               </button>
               <p className="muted" style={{ margin: 0 }}>Review all payslips before approving. This cannot be undone.</p>
             </div>
           )}
 
           {selectedRun.status === "APPROVED" && (
-            <div style={{ display: "flex", gap: "8px", marginTop: "20px" }}>
+            <div style={{ display: "flex", gap: "8px", marginTop: "20px", flexWrap: "wrap" }}>
               <button className="button" onClick={() => lockPayroll(selectedRun.id)} disabled={isLoading}>
                 Lock & Finalize Payroll
+              </button>
+              <button
+                className="button secondary"
+                onClick={() => rejectPayroll(selectedRun.id)}
+                disabled={isLoading}
+                style={{ borderColor: "#f59e0b", color: "#f59e0b" }}
+              >
+                ↩️ Reject & Revise
               </button>
               <button className="button secondary" onClick={() => window.print()}>
                 Print Payroll Report

@@ -57,17 +57,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const body = await request.json();
-    const { staffId, year, month, startDate, endDate, days, notes } = body;
+    const { staffId, year, month, startDate, endDate, resumptionDate, days, notes } = body;
 
     // Validate required fields
-    if (!staffId || !year || !month || !startDate || !endDate) {
+    if (!staffId || !year || !month || !startDate || !endDate || !resumptionDate) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    // Validate month is between 1-11
+    // Validate month is between 1-11 (January to November)
     if (month < 1 || month > 11) {
       return NextResponse.json(
         { error: "Leave can only be scheduled from January to November" },
@@ -84,11 +84,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Staff not found" }, { status: 404 });
     }
 
-    const resumptionDate = new Date(staff.resumptionDate);
+    const staffResumptionDate = new Date(staff.resumptionDate);
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-    if (resumptionDate > oneYearAgo) {
+    if (staffResumptionDate > oneYearAgo) {
       return NextResponse.json(
         { error: "Staff must have more than 1 year tenure to be eligible for leave" },
         { status: 400 }
@@ -153,6 +153,7 @@ export async function POST(request: Request) {
         month,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
+        resumptionDate: new Date(resumptionDate),
         days: days || 0,
         notes: notes || null,
         createdById: session.userId,

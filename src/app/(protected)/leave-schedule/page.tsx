@@ -19,6 +19,7 @@ interface LeaveScheduleEntry {
   month: number;
   startDate: string;
   endDate: string;
+  resumptionDate: string;
   days: number;
   notes: string | null;
   staff: {
@@ -44,6 +45,7 @@ export default function LeaveSchedulePage() {
     month: 1,
     startDate: "",
     endDate: "",
+    resumptionDate: "",
     days: 0,
     notes: "",
   });
@@ -73,7 +75,9 @@ export default function LeaveSchedulePage() {
   const fetchLeaveSchedules = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/leave-schedule?year=${selectedYear}`);
+      const res = await fetch(`/api/leave-schedule?year=${selectedYear}&t=${Date.now()}`, {
+        cache: 'no-store'
+      });
       if (res.ok) {
         const data = await res.json();
         setLeaveSchedules(data.schedules);
@@ -141,7 +145,10 @@ export default function LeaveSchedulePage() {
           : "Leave schedule added successfully"
       );
       resetForm();
-      fetchLeaveSchedules();
+      await fetchLeaveSchedules();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch {
       setError("An error occurred while saving the leave schedule");
     }
@@ -154,6 +161,7 @@ export default function LeaveSchedulePage() {
       month: schedule.month,
       startDate: schedule.startDate.split("T")[0],
       endDate: schedule.endDate.split("T")[0],
+      resumptionDate: schedule.resumptionDate.split("T")[0],
       days: schedule.days,
       notes: schedule.notes || "",
     });
@@ -172,7 +180,10 @@ export default function LeaveSchedulePage() {
 
       if (res.ok) {
         setSuccessMessage("Leave schedule deleted successfully");
-        fetchLeaveSchedules();
+        await fetchLeaveSchedules();
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(""), 3000);
       } else {
         const data = await res.json();
         setError(data.error || "Failed to delete leave schedule");
@@ -188,6 +199,7 @@ export default function LeaveSchedulePage() {
       month: 1,
       startDate: "",
       endDate: "",
+      resumptionDate: "",
       days: 0,
       notes: "",
     });
@@ -195,13 +207,54 @@ export default function LeaveSchedulePage() {
     setShowAddForm(false);
   };
 
+  const handleClearAll = async () => {
+    if (!confirm(
+      `⚠️ DELETE AUTO-GENERATED SCHEDULES for March-November ${selectedYear}?\n\n` +
+      `This will permanently delete ${leaveSchedules.filter(s => s.month >= 3).length} schedule(s).\n\n` +
+      `January-February schedules (manual entry) will be preserved.\n\n` +
+      `You can then manually update schedules or use Auto-Generate again.\n\n` +
+      `This action cannot be undone. Continue?`
+    )) {
+      return;
+    }
+
+    setError("");
+    setSuccessMessage("");
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/api/leave-schedule/clear?year=${selectedYear}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to clear leave schedules");
+        return;
+      }
+
+      setSuccessMessage(data.message || `All schedules cleared for ${selectedYear}`);
+      await fetchLeaveSchedules();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch {
+      setError("An error occurred while clearing leave schedules");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAutoGenerate = async () => {
     if (!confirm(
-      `This will auto-generate leave schedules for all eligible staff for ${selectedYear}.\n\n` +
-      `Staff will be distributed across January-November respecting:\n` +
-      `- Maximum 10 people per month\n` +
+      `This will auto-generate leave schedules for all eligible staff for March-November ${selectedYear}.\n\n` +
+      `January-February are excluded for manual entry.\n\n` +
+      `Staff will be distributed across March-November respecting:\n` +
+      `- Maximum 5-7 people per month\n` +
       `- Maximum 2 people per department per month\n` +
-      `- 14 days leave per person\n\n` +
+      `- 14 days leave per person\n` +
+      `- 2-day buffer before and after public holidays\n\n` +
       `Continue?`
     )) {
       return;
@@ -227,10 +280,56 @@ export default function LeaveSchedulePage() {
 
       setSuccessMessage(data.message || `Successfully created ${data.created} leave schedules`);
       await fetchLeaveSchedules();
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch {
       setError("An error occurred while auto-generating leave schedules");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportToExcel = async () => {
+    try {
+      // Dynamically import xlsx
+      const XLSX = await import('xlsx');
+      
+      // Prepare data for Excel
+      const data = leaveSchedules.map((schedule) => ({
+        "Name": schedule.staff.fullName,
+        "Department": schedule.staff.department,
+        "Month Proposed": getMonthName(schedule.month),
+        "Proposed Leave Start Date": schedule.startDate.split('T')[0],
+        "Leave End Date": schedule.endDate.split('T')[0],
+        "Resumption Date": schedule.resumptionDate.split('T')[0],
+      }));
+
+      // Create workbook and worksheet
+      const ws = XLSX.utils.json_to_sheet(data);
+      
+      // Set column widths
+      const colWidths = [
+        { wch: 25 },  // Name
+        { wch: 20 },  // Department
+        { wch: 18 },  // Month Proposed
+        { wch: 20 },  // Proposed Leave Start Date
+        { wch: 18 },  // Leave End Date
+        { wch: 18 },  // Resumption Date
+      ];
+      ws['!cols'] = colWidths;
+      
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `Leave Schedule ${selectedYear}`);
+      
+      // Generate filename
+      const filename = `Leave_Schedule_${selectedYear}.xlsx`;
+      
+      // Download the file
+      XLSX.writeFile(wb, filename);
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      setError("Failed to export to Excel. Please make sure xlsx library is installed.");
     }
   };
 
@@ -274,10 +373,26 @@ export default function LeaveSchedulePage() {
                 🪄 Auto-Generate Schedule
               </button>
               <button
+                className="btn-danger"
+                onClick={handleClearAll}
+                disabled={loading}
+                title="Delete all leave schedules for this year"
+              >
+                🗑️ Clear All
+              </button>
+              <button
                 className="btn-primary"
                 onClick={() => setShowAddForm(true)}
               >
                 + Add Manually
+              </button>
+              <button
+                className="btn-secondary"
+                onClick={handleExportToExcel}
+                disabled={loading || leaveSchedules.length === 0}
+                title="Export leave schedules to Excel"
+              >
+                📥 Export to Excel
               </button>
             </>
           )}
@@ -298,7 +413,7 @@ export default function LeaveSchedulePage() {
             Click <strong>&quot;Auto-Generate Schedule&quot;</strong> to automatically create leave schedules for all {eligibleStaff.length} eligible staff.
           </p>
           <ul style={{ margin: "0.5rem 0 0 1.5rem", fontSize: "0.9rem" }}>
-            <li>Distributes staff across January-November</li>
+            <li>Distributes staff across March-November</li>
             <li>Respects maximum 10 people per month</li>
             <li>Maximum 2 people per department per month</li>
             <li>Assigns 14 days leave per person</li>
@@ -356,7 +471,7 @@ export default function LeaveSchedulePage() {
                   ))}
                 </select>
                 <small className="help-text">
-                  January to November only. Max 10 people/month, max 2 per department/month
+                  January to November (Auto-generate only creates March-Nov). Max 10 people/month, max 2 per department/month
                 </small>
               </div>
 
@@ -386,6 +501,21 @@ export default function LeaveSchedulePage() {
                   }
                   required
                 />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="resumptionDate">Resumption Date *</label>
+                <input
+                  type="date"
+                  id="resumptionDate"
+                  className="input"
+                  value={formData.resumptionDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, resumptionDate: e.target.value })
+                  }
+                  required
+                />
+                <small className="help-text">Date when employee returns to work</small>
               </div>
 
               <div className="form-group">
@@ -449,7 +579,7 @@ export default function LeaveSchedulePage() {
         ) : (
           <>
             <div className="month-summary" style={{ marginBottom: "1.5rem" }}>
-              <h3 style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>Monthly Summary</h3>
+              <h3 style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>Monthly Summary (January-November)</h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "0.5rem" }}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((m) => {
                   const monthSchedules = leaveSchedules.filter(s => s.month === m);
@@ -483,6 +613,7 @@ export default function LeaveSchedulePage() {
                   <th>Month</th>
                   <th>Start Date</th>
                   <th>End Date</th>
+                  <th>Resumption Date</th>
                   <th>Days</th>
                   <th>Notes</th>
                   <th className="no-print">Actions</th>
@@ -502,6 +633,9 @@ export default function LeaveSchedulePage() {
                       </td>
                       <td>
                         {new Date(schedule.endDate).toLocaleDateString()}
+                      </td>
+                      <td>
+                        {new Date(schedule.resumptionDate).toLocaleDateString()}
                       </td>
                       <td>{schedule.days}</td>
                       <td>{schedule.notes || "-"}</td>

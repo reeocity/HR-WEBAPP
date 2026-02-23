@@ -27,9 +27,9 @@ export async function POST(request: Request) {
     );
   }
 
-  // Get all ACTIVE staff
+  // Get all ACTIVE staff (non-INACTIVE includes null/undefined status as active)
   const staff = await prisma.staff.findMany({
-    where: { status: "ACTIVE" },
+    where: { status: { not: "INACTIVE" } },
     include: {
       salaryHistory: {
         orderBy: { effectiveFrom: "desc" },

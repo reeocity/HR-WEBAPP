@@ -150,6 +150,98 @@ export async function GET(request: Request) {
     orderBy: { createdAt: "asc" },
   });
 
+  // Fetch all staff to check statutory deductions for those in first/second month
+  const allStaff = await prisma.staff.findMany({
+    where: {
+      status: {
+        not: "INACTIVE",
+      },
+    },
+    select: {
+      id: true,
+      staffId: true,
+      fullName: true,
+      resumptionDate: true,
+    },
+  });
+
+  // Get salary for each staff
+  const staffWithSalary = await Promise.all(
+    allStaff.map(async (s) => {
+      const salary = await prisma.salaryHistory.findFirst({
+        where: { staffId: s.id },
+        orderBy: { effectiveFrom: "desc" },
+      });
+      return {
+        ...s,
+        salary: salary ? Number(salary.monthlySalary) : 0,
+      };
+    })
+  );
+
+  // Calculate statutory deductions for staff in 1st or 2nd month
+  const statutoryDeductions = staffWithSalary
+    .map((staff) => {
+      const resumption = new Date(staff.resumptionDate);
+      const now = end; // Use end of report month
+      const diffMs = now.getTime() - resumption.getTime();
+      const diffMonths = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30));
+      const employmentMonth = diffMonths + 1;
+
+      // Only include staff in their 1st or 2nd month
+      if (employmentMonth < 1 || employmentMonth > 2) {
+        return null;
+      }
+
+      // 25% statutory deduction
+      const statutoryAmount = staff.salary * 0.25;
+
+      return {
+        staffName: staff.fullName,
+        staffId: staff.staffId,
+        amount: statutoryAmount.toString(),
+        employmentMonth: employmentMonth,
+        note: `${employmentMonth === 1 ? "First month" : "Second month"} statutory deduction (25%)`,
+      };
+    })
+    .filter((s) => s !== null) as Array<{ staffName: string; staffId: string | null; amount: string; employmentMonth: number; note: string }>;
+
+  // Fetch salary upgrades (salary history entries in this month)
+  const salaryUpgrades = await prisma.salaryHistory.findMany({
+    where: {
+      effectiveFrom: {
+        gte: start,
+        lt: end,
+      },
+    },
+    include: {
+      staff: { select: { id: true, fullName: true, staffId: true } },
+    },
+    orderBy: { effectiveFrom: "asc" },
+  });
+
+  // Get previous salary for comparison
+  const salaryUpgradesWithComparison = await Promise.all(
+    salaryUpgrades.map(async (upgrade) => {
+      const previousSalary = await prisma.salaryHistory.findFirst({
+        where: {
+          staffId: upgrade.staffId,
+          effectiveFrom: {
+            lt: upgrade.effectiveFrom,
+          },
+        },
+        orderBy: { effectiveFrom: "desc" },
+      });
+      return {
+        staffName: upgrade.staff.fullName,
+        staffId: upgrade.staff.staffId,
+        newSalary: upgrade.monthlySalary.toString(),
+        previousSalary: previousSalary ? previousSalary.monthlySalary.toString() : "0",
+        effectiveFrom: upgrade.effectiveFrom.toISOString().slice(0, 10),
+      };
+    })
+  );
+
   // Calculate lateness summary (group by staff) - only include staff with 3+ lateness
   const latenessSummary: Record<string, { fullName: string; staffId: string | null; count: number }> = {};
   latenessRecords.forEach((log) => {
@@ -223,5 +315,7 @@ export async function GET(request: Request) {
       reason: a.reason,
       amount: a.amount.toString(),
     })),
+    statutoryDeductions: statutoryDeductions,
+    salaryUpgrades: salaryUpgradesWithComparison,
   });
 }

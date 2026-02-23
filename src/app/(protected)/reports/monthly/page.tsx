@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type ReportData = {
@@ -15,6 +15,8 @@ type ReportData = {
   manualDeductions: Array<{ staffName: string; staffId: string | null; category: string; amount: string; note: string | null }>;
   inactiveStaff: Array<{ staffId: string | null; fullName: string; reason: string | null; lastActiveDate: string | null }>;
   allowances: Array<{ staffName: string; staffId: string | null; reason: string; amount: string }>;
+  statutoryDeductions: Array<{ staffName: string; staffId: string | null; amount: string; employmentMonth: number; note: string | null }>;
+  salaryUpgrades: Array<{ staffName: string; staffId: string | null; newSalary: string; previousSalary: string; effectiveFrom: string }>;
 };
 
 export default function MonthlyReportPage() {
@@ -26,7 +28,7 @@ export default function MonthlyReportPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const loadReport = async () => {
+  const loadReport = useCallback(async () => {
     setIsLoading(true);
     setMessage(null);
     try {
@@ -37,16 +39,16 @@ export default function MonthlyReportPage() {
         return;
       }
       setData(json);
-    } catch (e) {
+    } catch {
       setMessage("Failed to load report.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [month, year]);
 
   useEffect(() => {
     loadReport();
-  }, [month, year]);
+  }, [loadReport]);
 
   const formatNaira = (amount: string | number) => {
     const num = typeof amount === "string" ? Number(amount) : amount;
@@ -54,34 +56,104 @@ export default function MonthlyReportPage() {
   };
 
   return (
-    <div style={{ gap: "24px", display: "flex", flexDirection: "column" }}>
-      <section className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h1>Monthly Report</h1>
-          <button className="button secondary" onClick={() => router.push("/")}>
-            Back
-          </button>
-        </div>
+    <>
+      <style>{`
+        @media print {
+          .no-print {
+            display: none !important;
+          }
+          
+          body {
+            background: white !important;
+          }
+          
+          .card {
+            background: white !important;
+            backdrop-filter: none !important;
+            box-shadow: none !important;
+            page-break-inside: avoid;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 0 20px 0 !important;
+          }
+          
+          .card h2 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            page-break-after: avoid;
+          }
+          
+          .table tbody tr {
+            background: white !important;
+            box-shadow: none !important;
+            page-break-inside: avoid;
+            border: 1px solid #ddd !important;
+            border-radius: 0 !important;
+          }
+          
+          .table tbody tr:hover {
+            transform: none !important;
+            box-shadow: none !important;
+          }
+          
+          .table tbody td {
+            border-top: 1px solid #ddd !important;
+            border-radius: 0 !important;
+          }
+          
+          .table tbody tr td:first-child {
+            border-radius: 0 !important;
+          }
+          
+          .table tbody tr td:last-child {
+            border-radius: 0 !important;
+          }
+          
+          .table thead th {
+            background: #f5f5f5 !important;
+            border: 1px solid #ddd !important;
+            page-break-after: avoid;
+          }
+          
+          h1, h2 {
+            color: black !important;
+            page-break-after: avoid;
+          }
+          
+          > div {
+            gap: 0 !important;
+          }
+        }
+      `}</style>
+      
+      <div style={{ gap: "24px", display: "flex", flexDirection: "column" }}>
+        <section className="card no-print">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h1>Monthly Report</h1>
+            <button className="button secondary" onClick={() => router.push("/")}>
+              Back
+            </button>
+          </div>
 
-        <div style={{ display: "flex", gap: "12px", marginTop: "16px", alignItems: "flex-end" }}>
-          <label>
-            <span className="muted">Month</span>
-            <input className="input" type="number" min={1} max={12} value={month} onChange={(e) => setMonth(Number(e.target.value))} />
-          </label>
-          <label>
-            <span className="muted">Year</span>
-            <input className="input" type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} />
-          </label>
-          <button className="button" onClick={loadReport} disabled={isLoading}>
-            {isLoading ? "Loading..." : "Generate Report"}
-          </button>
-          <button className="button secondary" onClick={() => window.print()}>
-            Print
-          </button>
-        </div>
+          <div style={{ display: "flex", gap: "12px", marginTop: "16px", alignItems: "flex-end" }}>
+            <label>
+              <span className="muted">Month</span>
+              <input className="input" type="number" min={1} max={12} value={month} onChange={(e) => setMonth(Number(e.target.value))} />
+            </label>
+            <label>
+              <span className="muted">Year</span>
+              <input className="input" type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} />
+            </label>
+            <button className="button" onClick={loadReport} disabled={isLoading}>
+              {isLoading ? "Loading..." : "Generate Report"}
+            </button>
+            <button className="button secondary" onClick={() => window.print()}>
+              Print
+            </button>
+          </div>
 
-        {message && <p className="muted" style={{ marginTop: "8px", color: "red" }}>{message}</p>}
-      </section>
+          {message && <p className="muted" style={{ marginTop: "8px", color: "red" }}>{message}</p>}
+        </section>
 
       {data && (
         <>
@@ -294,6 +366,82 @@ export default function MonthlyReportPage() {
             </section>
           )}
 
+          {/* Statutory Deductions Section */}
+          {data.statutoryDeductions.length > 0 && (
+            <section className="card">
+              <h2 style={{ marginBottom: "8px", color: "#1a202c", fontSize: "1.3rem", fontWeight: "600" }}>
+                Statutory Deductions - New Staff ({data.statutoryDeductions.length})
+              </h2>
+              <p className="muted" style={{ marginBottom: "12px" }}>Staff in their first or second month of employment</p>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Staff ID</th>
+                    <th>Staff Name</th>
+                    <th>Employment Month</th>
+                    <th>Amount</th>
+                    <th>Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.statutoryDeductions.map((s, i) => (
+                    <tr key={i}>
+                      <td>{s.staffId ?? "-"}</td>
+                      <td>{s.staffName}</td>
+                      <td>
+                        {s.employmentMonth === 1 && "1st Month"}
+                        {s.employmentMonth === 2 && "2nd Month"}
+                        {s.employmentMonth > 2 && `${s.employmentMonth}th Month`}
+                      </td>
+                      <td>{formatNaira(Number(s.amount))}</td>
+                      <td className="muted">{s.note ?? "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          )}
+
+          {/* Salary Upgrades Section */}
+          {data.salaryUpgrades.length > 0 && (
+            <section className="card">
+              <h2 style={{ marginBottom: "8px", color: "#1a202c", fontSize: "1.3rem", fontWeight: "600" }}>
+                Salary Upgrades ({data.salaryUpgrades.length})
+              </h2>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Staff ID</th>
+                    <th>Staff Name</th>
+                    <th>Previous Salary</th>
+                    <th>New Salary</th>
+                    <th>Difference</th>
+                    <th>Effective From</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.salaryUpgrades.map((s, i) => {
+                    const prev = Number(s.previousSalary);
+                    const newSal = Number(s.newSalary);
+                    const diff = newSal - prev;
+                    return (
+                      <tr key={i}>
+                        <td>{s.staffId ?? "-"}</td>
+                        <td>{s.staffName}</td>
+                        <td>{formatNaira(prev)}</td>
+                        <td>{formatNaira(newSal)}</td>
+                        <td style={{ color: diff >= 0 ? "green" : "red" }}>
+                          {diff >= 0 ? "+" : ""}{formatNaira(diff)}
+                        </td>
+                        <td>{s.effectiveFrom}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </section>
+          )}
+
           {/* Inactive Staff Section */}
           {data.inactiveStaff.length > 0 && (
             <section className="card">
@@ -372,6 +520,7 @@ export default function MonthlyReportPage() {
           </section>
         </>
       )}
-    </div>
+      </div>
+    </>
   );
 }
