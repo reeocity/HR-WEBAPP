@@ -45,6 +45,7 @@ model Staff {
   monthlyAllowances MonthlyAllowance[]
   payrollLines     PayrollLine[]
   staffMealTickets StaffMealTicket[]
+  leaveSchedules   LeaveSchedule[]
 }
 
 enum InactiveReason {
@@ -256,4 +257,22 @@ model StaffMealTicket {
   createdById String   @map("created_by")
   createdBy   User     @relation(fields: [createdById], references: [id])
   createdAt   DateTime @default(now()) @map("created_at")
+}
+
+model LeaveSchedule {
+  id          String   @id @default(cuid())
+  staffId     String   @map("staff_id")
+  year        Int      @map("year")
+  month       Int      @map("month")
+  startDate   DateTime @map("start_date")
+  endDate     DateTime @map("end_date")
+  days        Int      @map("days")
+  notes       String?  @map("notes")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdById String?  @map("created_by")
+
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@unique([staffId, year], name: "staffId_year_unique")
 }

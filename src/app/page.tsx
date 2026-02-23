@@ -224,6 +224,23 @@ export default function StaffListPage() {
 
   return (
     <div className="grid" style={{ gap: "24px" }}>
+      <nav className="card" style={{ padding: "12px 24px" }}>
+        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          <Link href="/" className="nav-link active">
+            Staff List
+          </Link>
+          <Link href="/leave-schedule" className="nav-link">
+            Leave Schedule
+          </Link>
+          <Link href="/deductions" className="nav-link">
+            Deductions
+          </Link>
+          <Link href="/reports/monthly" className="nav-link">
+            Reports
+          </Link>
+        </div>
+      </nav>
+      
       <section className="card">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
           <div>

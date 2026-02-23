@@ -224,3 +224,21 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+.nav-link {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s;
+  color: #64748b;
+}
+
+.nav-link:hover {
+  background: rgba(91, 95, 255, 0.1);
+  color: var(--primary);
+}
+
+.nav-link.active {
+  background: var(--primary);
+  color: white;
+}
