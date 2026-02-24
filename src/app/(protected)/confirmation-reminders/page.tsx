@@ -99,185 +99,179 @@ export default function ConfirmationRemindersPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Staff Confirmation Reminders</h1>
-        <p className="text-gray-600">Staff members requiring confirmation (6+ months since resumption)</p>
-      </div>
-
-      {/* Alert Banner */}
-      {summary && summary.total > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <div className="text-red-600 text-xl">⚠️</div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-50 to-white">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-12">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 md:p-12 shadow-xl">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -right-32 -top-32 h-64 w-64 rounded-full bg-rose-500/20 blur-3xl" />
+            <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-amber-500/20 blur-3xl" />
+          </div>
+          <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
             <div>
-              <h3 className="font-semibold text-red-900">Action Required</h3>
-              <p className="text-red-700 text-sm">
-                {summary.total} staff member{summary.total !== 1 ? 's' : ''} pending confirmation. 
-                {summary.critical > 0 && (
-                  <span className="font-semibold"> {summary.critical} critical (9+ months).</span>
-                )}
-              </p>
+              <p className="text-xs uppercase tracking-[0.3em] text-rose-300/80">Confirmation Tracker</p>
+              <h1 className="mt-4 text-4xl md:text-5xl font-bold text-white">Staff Confirmation</h1>
+              <p className="mt-3 max-w-lg text-sm md:text-base text-slate-300">Track and manage staff confirmations. Flag critical cases that need immediate action.</p>
             </div>
+            {summary && (
+              <div className="grid grid-cols-3 gap-3 md:gap-4">
+                <div className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3">
+                  <div className="text-xs text-slate-300">Total</div>
+                  <div className="text-3xl md:text-4xl font-bold text-white mt-1">{summary.total}</div>
+                </div>
+                <div className="rounded-xl bg-rose-500/20 backdrop-blur-sm border border-rose-400/30 px-4 py-3">
+                  <div className="text-xs text-rose-200">Critical</div>
+                  <div className="text-3xl md:text-4xl font-bold text-rose-100 mt-1">{summary.critical}</div>
+                </div>
+                <div className="rounded-xl bg-amber-500/20 backdrop-blur-sm border border-amber-400/30 px-4 py-3">
+                  <div className="text-xs text-amber-200">Urgent</div>
+                  <div className="text-3xl md:text-4xl font-bold text-amber-100 mt-1">{summary.urgent}</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
 
-      {/* Summary Cards */}
-      {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <div className="text-sm text-gray-600 font-medium">Total Pending</div>
-            <div className="text-2xl font-bold text-gray-900">{summary.total}</div>
-          </div>
-          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-            <div className="text-sm text-red-600 font-medium">Critical (9+ months)</div>
-            <div className="text-2xl font-bold text-red-900">{summary.critical}</div>
-          </div>
-          <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-            <div className="text-sm text-orange-600 font-medium">Urgent (6-9 months)</div>
-            <div className="text-2xl font-bold text-orange-900">{summary.urgent}</div>
-          </div>
-          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-            <div className="text-sm text-yellow-600 font-medium">Approaching (5-6 months)</div>
-            <div className="text-2xl font-bold text-yellow-900">{summary.approaching}</div>
-          </div>
-        </div>
-      )}
+        <div className="flex flex-col gap-6">
+          {/* Stats Cards */}
+          {summary && (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition">
+                <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Pending</div>
+                <div className="text-3xl font-bold text-slate-900 mt-2">{summary.total}</div>
+              </div>
+              <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-5 shadow-sm hover:shadow-md transition">
+                <div className="text-xs font-semibold uppercase tracking-wider text-rose-600">Critical (9+ mo)</div>
+                <div className="text-3xl font-bold text-rose-900 mt-2">{summary.critical}</div>
+              </div>
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-5 shadow-sm hover:shadow-md transition">
+                <div className="text-xs font-semibold uppercase tracking-wider text-amber-600">Urgent (6-9 mo)</div>
+                <div className="text-3xl font-bold text-amber-900 mt-2">{summary.urgent}</div>
+              </div>
+              <div className="rounded-2xl border border-yellow-200 bg-yellow-50/80 p-5 shadow-sm hover:shadow-md transition">
+                <div className="text-xs font-semibold uppercase tracking-wider text-yellow-600">Approaching</div>
+                <div className="text-3xl font-bold text-yellow-900 mt-2">{summary.approaching}</div>
+              </div>
+            </div>
+          )}
 
-      {/* Filter Tabs */}
-      <div className="mb-6 flex gap-2 border-b">
-        <button
-          onClick={() => setView('all')}
-          className={`px-4 py-2 font-medium ${
-            view === 'all'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          All Pending
-        </button>
-        <button
-          onClick={() => setView('critical')}
-          className={`px-4 py-2 font-medium ${
-            view === 'critical'
-              ? 'border-b-2 border-red-500 text-red-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Critical
-        </button>
-        <button
-          onClick={() => setView('urgent')}
-          className={`px-4 py-2 font-medium ${
-            view === 'urgent'
-              ? 'border-b-2 border-orange-500 text-orange-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Urgent
-        </button>
-        <button
-          onClick={() => setView('approaching')}
-          className={`px-4 py-2 font-medium ${
-            view === 'approaching'
-              ? 'border-b-2 border-yellow-500 text-yellow-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Approaching
-        </button>
-      </div>
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+            {(
+              [
+                { id: 'all', label: 'All' },
+                { id: 'critical', label: 'Critical' },
+                { id: 'urgent', label: 'Urgent' },
+                { id: 'approaching', label: 'Approaching' },
+              ] as const
+            ).map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setView(item.id)}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                  view === item.id
+                    ? 'bg-slate-900 text-white shadow-lg'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
 
-      {/* Staff Table */}
-      {loading ? (
-        <div className="text-center py-8">Loading...</div>
-      ) : getDisplayReminders().length === 0 ? (
-        <div className="text-center py-8 bg-white rounded-lg shadow">
-          <div className="text-green-600 text-4xl mb-2">✓</div>
-          <p className="text-gray-600">No staff pending confirmation in this category</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto bg-white rounded-lg shadow">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Staff</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Resumption Date</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Months Employed</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Offer Letter</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Urgency</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
+          {loading ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white py-16 text-center text-slate-400">
+              Loading reminders...
+            </div>
+          ) : getDisplayReminders().length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white py-16 text-center text-slate-400">
+              No staff pending confirmation in this category.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
               {getDisplayReminders().map((staff) => {
-                const urgencyLevel = 
+                const urgencyLevel =
                   staff.monthsSinceResumption >= 9 ? 'critical' :
                   staff.monthsSinceResumption >= 6 ? 'urgent' : 'approaching';
-                
-                const urgencyColors = {
-                  critical: 'bg-red-100 text-red-800',
-                  urgent: 'bg-orange-100 text-orange-800',
-                  approaching: 'bg-yellow-100 text-yellow-800'
+
+                const urgencyConfig = {
+                  critical: {
+                    badge: 'border-rose-300 bg-rose-50 text-rose-700',
+                    accent: 'border-rose-200 bg-rose-50/50',
+                    icon: '⚠️'
+                  },
+                  urgent: {
+                    badge: 'border-amber-300 bg-amber-50 text-amber-700',
+                    accent: 'border-amber-200 bg-amber-50/50',
+                    icon: '⚡'
+                  },
+                  approaching: {
+                    badge: 'border-yellow-300 bg-yellow-50 text-yellow-700',
+                    accent: 'border-yellow-200 bg-yellow-50/50',
+                    icon: '⏰'
+                  }
                 };
 
                 return (
-                  <tr key={staff.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="font-medium">{staff.fullName}</div>
-                      <div className="text-sm text-gray-500">{staff.staffId || 'No ID'}</div>
-                      {staff.phone && (
-                        <div className="text-xs text-gray-400">{staff.phone}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm">{staff.department}</div>
-                      <div className="text-xs text-gray-500">{staff.position}</div>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {formatDate(staff.resumptionDate)}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="text-lg font-bold">{staff.monthsSinceResumption}</div>
-                      <div className="text-xs text-gray-500">{staff.daysSinceResumption} days</div>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {staff.offerLetterGiven ? (
-                        <span className="text-green-600">✓</span>
-                      ) : (
-                        <span className="text-red-600">✗</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${urgencyColors[urgencyLevel]}`}>
-                        {urgencyLevel.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <div className="flex gap-2 justify-center">
-                        <button
-                          onClick={() => confirmStaff(staff.id)}
-                          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                        >
-                          Confirm Now
-                        </button>
-                        <a
-                          href={`/staff/${staff.id}`}
-                          className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm"
-                        >
-                          View
-                        </a>
+                  <div key={staff.id} className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div>
+                            <h3 className="text-lg font-semibold text-slate-900">{staff.fullName}</h3>
+                            <p className="text-sm text-slate-600 mt-1">{staff.department} • {staff.position}</p>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex items-center gap-2">
+                          <span className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold ${urgencyConfig[urgencyLevel].badge}`}>
+                            <span>{urgencyConfig[urgencyLevel].icon}</span>
+                            {urgencyLevel.toUpperCase()}
+                          </span>
+                          <span className="text-xs text-slate-500">{staff.staffId ? `ID: ${staff.staffId}` : 'Staff ID not assigned'}</span>
+                        </div>
+                        <div className="mt-3 flex flex-col gap-1 text-sm text-slate-600">
+                          <span>📅 Resumed: {formatDate(staff.resumptionDate)}</span>
+                          {staff.phone && <span>📞 {staff.phone}</span>}
+                        </div>
                       </div>
-                    </td>
-                  </tr>
+
+                      <div className={`flex flex-col items-start lg:items-end gap-3 rounded-xl border p-4 ${urgencyConfig[urgencyLevel].accent}`}>
+                        <div className="text-right">
+                          <div className="text-4xl font-bold text-slate-900">{staff.monthsSinceResumption}</div>
+                          <div className="text-xs text-slate-600 mt-0.5">months employed</div>
+                          <div className="text-xs text-slate-500 mt-1">{staff.daysSinceResumption} days</div>
+                        </div>
+                        <div className="w-full border-t border-slate-200/50 pt-3">
+                          <span className="inline-block text-xs font-semibold text-slate-600">
+                            Offer Letter: <span className={staff.offerLetterGiven ? 'text-emerald-600 font-bold' : 'text-slate-400'}>
+                              {staff.offerLetterGiven ? '✓ Given' : '✗ Pending'}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                      <button
+                        onClick={() => confirmStaff(staff.id)}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 hover:shadow-lg transition-all duration-200 order-2 sm:order-1"
+                      >
+                        ✓ Confirm
+                      </button>
+                      <a
+                        href={`/staff/${staff.staffId}`}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:shadow-md transition-all duration-200 order-1 sm:order-2"
+                      >
+                        👤 Profile
+                      </a>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
