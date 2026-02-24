@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface StaffDocument {
   id: string;
@@ -42,11 +42,7 @@ export default function DocumentsPage() {
   const [selectedStaff, setSelectedStaff] = useState<StaffDocument | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchStaffDocuments();
-  }, [filter]);
-
-  const fetchStaffDocuments = async () => {
+  const fetchStaffDocuments = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/staff/documents?filter=${filter}`);
@@ -58,9 +54,13 @@ export default function DocumentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
 
-  const updateDocumentStatus = async (staffId: string, updates: any) => {
+  useEffect(() => {
+    fetchStaffDocuments();
+  }, [filter, fetchStaffDocuments]);
+
+  const updateDocumentStatus = async (staffId: string, updates: Partial<StaffDocument>) => {
     setSaving(true);
     try {
       const response = await fetch('/api/staff/documents', {

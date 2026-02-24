@@ -16,6 +16,15 @@ type StaffDetail = {
   lastActiveDate: string | null;
   phone: string | null;
   resumptionDate: string;
+  isConfirmed?: boolean;
+  confirmationDate?: string | null;
+  offerLetterGiven?: boolean;
+  offerLetterDate?: string | null;
+  hasValidId?: boolean;
+  hasProofOfAddress?: boolean;
+  hasPassportPhotos?: boolean;
+  hasQualification?: boolean;
+  hasGuarantorForms?: boolean;
 };
 
 type LatenessLog = { id: string; date: string; arrivalTime: string | null };
@@ -113,6 +122,15 @@ export default function StaffDetailPage() {
         lastActiveDate: staff.lastActiveDate,
         phone: staff.phone,
         resumptionDate: staff.resumptionDate,
+        isConfirmed: staff.isConfirmed,
+        confirmationDate: staff.confirmationDate,
+        offerLetterGiven: staff.offerLetterGiven,
+        offerLetterDate: staff.offerLetterDate,
+        hasValidId: staff.hasValidId,
+        hasProofOfAddress: staff.hasProofOfAddress,
+        hasPassportPhotos: staff.hasPassportPhotos,
+        hasQualification: staff.hasQualification,
+        hasGuarantorForms: staff.hasGuarantorForms,
       }),
     });
     const data = await res.json();
@@ -424,6 +442,86 @@ export default function StaffDetailPage() {
             <span className="muted">Resumption Date</span>
             <input className="input" type="date" value={staff.resumptionDate} onChange={(e) => setStaff({ ...staff, resumptionDate: e.target.value })} />
           </label>
+        </div>
+
+        {/* Confirmation and Document Tracking */}
+        <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid #e5e7eb" }}>
+          <h3 style={{ marginBottom: "12px", fontSize: "1.1em", fontWeight: 600 }}>Confirmation & Onboarding</h3>
+          <div className="grid grid-2" style={{ gap: "12px" }}>
+            <label>
+              <span className="muted">Offer Letter Given</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+                <input 
+                  type="checkbox" 
+                  checked={staff.offerLetterGiven ?? false} 
+                  onChange={(e) => setStaff({ ...staff, offerLetterGiven: e.target.checked })} 
+                  style={{ width: "20px", height: "20px" }}
+                />
+                <span>{staff.offerLetterGiven ? "Yes" : "No"}</span>
+              </div>
+            </label>
+            <label>
+              <span className="muted">Staff Confirmed</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+                <input 
+                  type="checkbox" 
+                  checked={staff.isConfirmed ?? false} 
+                  onChange={(e) => setStaff({ ...staff, isConfirmed: e.target.checked })} 
+                  style={{ width: "20px", height: "20px" }}
+                />
+                <span>{staff.isConfirmed ? "Yes" : "No"}</span>
+              </div>
+            </label>
+          </div>
+
+          <h4 style={{ marginTop: "16px", marginBottom: "8px", fontWeight: 600 }}>Required Documents Checklist</h4>
+          <div style={{ display: "grid", gap: "8px" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <input 
+                type="checkbox" 
+                checked={staff.hasValidId ?? false} 
+                onChange={(e) => setStaff({ ...staff, hasValidId: e.target.checked })} 
+                style={{ width: "18px", height: "18px" }}
+              />
+              <span>Valid ID Card (NIN, Passport)</span>
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <input 
+                type="checkbox" 
+                checked={staff.hasProofOfAddress ?? false} 
+                onChange={(e) => setStaff({ ...staff, hasProofOfAddress: e.target.checked })} 
+                style={{ width: "18px", height: "18px" }}
+              />
+              <span>Valid Proof of Address (Utility Bill)</span>
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <input 
+                type="checkbox" 
+                checked={staff.hasPassportPhotos ?? false} 
+                onChange={(e) => setStaff({ ...staff, hasPassportPhotos: e.target.checked })} 
+                style={{ width: "18px", height: "18px" }}
+              />
+              <span>Two Passport Photos</span>
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <input 
+                type="checkbox" 
+                checked={staff.hasQualification ?? false} 
+                onChange={(e) => setStaff({ ...staff, hasQualification: e.target.checked })} 
+                style={{ width: "18px", height: "18px" }}
+              />
+              <span>Copy of Highest Qualification</span>
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <input 
+                type="checkbox" 
+                checked={staff.hasGuarantorForms ?? false} 
+                onChange={(e) => setStaff({ ...staff, hasGuarantorForms: e.target.checked })} 
+                style={{ width: "18px", height: "18px" }}
+              />
+              <span>Guarantor Forms & Letters of Undertaking</span>
+            </label>
+          </div>
         </div>
 
         <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>

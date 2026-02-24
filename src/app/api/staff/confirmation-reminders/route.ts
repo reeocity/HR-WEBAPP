@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
+
+interface StaffBasic {
+  id: string;
+  staffId: string | null;
+  fullName: string;
+  department: string;
+  position: string;
+  resumptionDate: Date;
+  isConfirmed: boolean;
+  confirmationDate: Date | null;
+  offerLetterGiven: boolean;
+  phone: string | null;
+  createdAt: Date;
+}
 
 // GET - Get staff pending confirmation
 export async function GET(request: NextRequest) {
@@ -33,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate days since resumption and filter
     const now = new Date();
-    const staffWithDays = staff.map(s => {
+    const staffWithDays = staff.map((s: StaffBasic) => {
       const daysSinceResumption = Math.floor(
         (now.getTime() - new Date(s.resumptionDate).getTime()) / (1000 * 60 * 60 * 24)
       );

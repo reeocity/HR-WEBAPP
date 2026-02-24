@@ -1,5 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
+
+interface StaffWithDocuments {
+  id: string;
+  staffId: string | null;
+  fullName: string;
+  department: string;
+  position: string;
+  resumptionDate: Date;
+  isConfirmed: boolean;
+  confirmationDate: Date | null;
+  offerLetterGiven: boolean;
+  offerLetterDate: Date | null;
+  hasValidId: boolean;
+  hasProofOfAddress: boolean;
+  hasPassportPhotos: boolean;
+  hasQualification: boolean;
+  hasGuarantorForms: boolean;
+  documentsVerifiedAt: Date | null;
+  documentsVerifiedBy: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 // GET - Get document completion status for all staff
 export async function GET(request: NextRequest) {
@@ -38,7 +60,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate document completion status
-    const staffWithStatus = staff.map(s => {
+    const staffWithStatus = staff.map((s: StaffWithDocuments) => {
       const documentsComplete = s.hasValidId && 
                                s.hasProofOfAddress && 
                                s.hasPassportPhotos && 
@@ -123,7 +145,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Build update object with only provided fields
-    const updateData: any = {};
+    const updateData: Partial<StaffWithDocuments> = {};
 
     if (typeof isConfirmed === 'boolean') {
       updateData.isConfirmed = isConfirmed;

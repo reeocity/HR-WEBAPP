@@ -296,12 +296,28 @@ export default function DashboardPage() {
             delay={0.4}
           />
           <ActionCard
+            icon="�"
+            title="Documents & Confirmation"
+            description="Track document submission and staff confirmation"
+            href="/documents"
+            color="#06b6d4"
+            delay={0.45}
+          />
+          <ActionCard
+            icon="⚠️"
+            title="Confirmation Reminders"
+            description="Staff pending confirmation (6+ months)"
+            href="/confirmation-reminders"
+            color="#ef4444"
+            delay={0.5}
+          />
+          <ActionCard
             icon="📅"
             title="Leave Schedule"
             description="Manage leave dates and schedules"
             href="/leave-schedule"
             color="#10b981"
-            delay={0.5}
+            delay={0.55}
           />
           <ActionCard
             icon="⏰"
@@ -317,7 +333,7 @@ export default function DashboardPage() {
             description="Configure allowances and deductions"
             href="/payroll"
             color="#8b5cf6"
-            delay={0.7}
+            delay={0.65}
           />
           <ActionCard
             icon="📊"
@@ -325,7 +341,7 @@ export default function DashboardPage() {
             description="Generate comprehensive monthly reports"
             href="/reports/monthly"
             color="#ec4899"
-            delay={0.8}
+            delay={0.7}
           />
           <ActionCard
             icon="🔧"
@@ -333,7 +349,7 @@ export default function DashboardPage() {
             description="Manage manual staff deductions"
             href="/deductions"
             color="#14b8a6"
-            delay={0.9}
+            delay={0.75}
           />
         </div>
       </div>
