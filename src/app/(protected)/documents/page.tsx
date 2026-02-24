@@ -34,6 +34,14 @@ interface Summary {
   needsConfirmation: number;
 }
 
+const documentChecklist = [
+  { key: 'hasValidId', label: 'Valid ID (NIN/Passport)', short: 'ID' },
+  { key: 'hasProofOfAddress', label: 'Proof of Address', short: 'Address' },
+  { key: 'hasPassportPhotos', label: 'Two Passport Photos', short: 'Photos' },
+  { key: 'hasQualification', label: 'Highest Qualification', short: 'Qualification' },
+  { key: 'hasGuarantorForms', label: 'Guarantor Forms', short: 'Guarantor' },
+] as const;
+
 export default function DocumentsPage() {
   const [staff, setStaff] = useState<StaffDocument[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -80,154 +88,190 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleQuickUpdate = async (staffId: string, field: string, value: boolean) => {
+  const handleQuickUpdate = async (staffId: string, field: keyof StaffDocument, value: boolean) => {
     await updateDocumentStatus(staffId, { [field]: value });
+  };
+
+  const getMissingDocs = (staffItem: StaffDocument) => {
+    return documentChecklist.filter((doc) => !staffItem[doc.key]).map((doc) => doc);
+  };
+
+  const getCompletionPercent = (staffItem: StaffDocument) => {
+    if (!staffItem.totalDocuments) return 0;
+    return Math.round((staffItem.documentsCount / staffItem.totalDocuments) * 100);
   };
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Staff Documents & Confirmation</h1>
-        <p className="text-gray-600">Track document submission and staff confirmation status</p>
+      <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Documents & Confirmation</h1>
+          <p className="text-slate-500">Track document submission gaps and confirm staff manually.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+              filter === 'all'
+                ? 'bg-slate-900 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilter('complete')}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+              filter === 'complete'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+            }`}
+          >
+            Complete
+          </button>
+          <button
+            onClick={() => setFilter('incomplete')}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+              filter === 'incomplete'
+                ? 'bg-amber-600 text-white'
+                : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+            }`}
+          >
+            Incomplete
+          </button>
+          <button
+            onClick={() => setFilter('needs-confirmation')}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+              filter === 'needs-confirmation'
+                ? 'bg-rose-600 text-white'
+                : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
+            }`}
+          >
+            Needs Confirmation
+          </button>
+        </div>
       </div>
 
-      {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div className="text-sm text-blue-600 font-medium">Total Staff</div>
-            <div className="text-2xl font-bold text-blue-900">{summary.total}</div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="text-sm text-slate-500">Total Staff</div>
+            <div className="text-2xl font-semibold text-slate-900">{summary.total}</div>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <div className="text-sm text-green-600 font-medium">Complete Documents</div>
-            <div className="text-2xl font-bold text-green-900">{summary.complete}</div>
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <div className="text-sm text-emerald-700">Complete Documents</div>
+            <div className="text-2xl font-semibold text-emerald-900">{summary.complete}</div>
           </div>
-          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-            <div className="text-sm text-yellow-600 font-medium">Incomplete Documents</div>
-            <div className="text-2xl font-bold text-yellow-900">{summary.incomplete}</div>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <div className="text-sm text-amber-700">Incomplete Documents</div>
+            <div className="text-2xl font-semibold text-amber-900">{summary.incomplete}</div>
           </div>
-          <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-            <div className="text-sm text-red-600 font-medium">Needs Confirmation</div>
-            <div className="text-2xl font-bold text-red-900">{summary.needsConfirmation}</div>
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+            <div className="text-sm text-rose-700">Needs Confirmation</div>
+            <div className="text-2xl font-semibold text-rose-900">{summary.needsConfirmation}</div>
           </div>
         </div>
       )}
 
-      {/* Filter Tabs */}
-      <div className="mb-6 flex gap-2 border-b">
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-4 py-2 font-medium ${
-            filter === 'all'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          All Staff
-        </button>
-        <button
-          onClick={() => setFilter('complete')}
-          className={`px-4 py-2 font-medium ${
-            filter === 'complete'
-              ? 'border-b-2 border-green-500 text-green-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Complete
-        </button>
-        <button
-          onClick={() => setFilter('incomplete')}
-          className={`px-4 py-2 font-medium ${
-            filter === 'incomplete'
-              ? 'border-b-2 border-yellow-500 text-yellow-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Incomplete
-        </button>
-        <button
-          onClick={() => setFilter('needs-confirmation')}
-          className={`px-4 py-2 font-medium ${
-            filter === 'needs-confirmation'
-              ? 'border-b-2 border-red-500 text-red-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Needs Confirmation
-        </button>
-      </div>
-
-      {/* Staff Table */}
       {loading ? (
-        <div className="text-center py-8">Loading...</div>
+        <div className="text-center py-12 text-slate-500">Loading records...</div>
+      ) : staff.length === 0 ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+          No staff found for this filter.
+        </div>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-lg shadow">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Staff</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Offer Letter</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Confirmed</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Documents</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Days Active</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {staff.map((s) => (
-                <tr key={s.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <div className="font-medium">{s.fullName}</div>
-                    <div className="text-sm text-gray-500">{s.staffId || 'No ID'}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="text-sm">{s.department}</div>
-                    <div className="text-xs text-gray-500">{s.position}</div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <input
-                      type="checkbox"
-                      checked={s.offerLetterGiven}
-                      onChange={(e) => handleQuickUpdate(s.id, 'offerLetterGiven', e.target.checked)}
-                      className="w-4 h-4 cursor-pointer"
-                    />
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <input
-                      type="checkbox"
-                      checked={s.isConfirmed}
-                      onChange={(e) => handleQuickUpdate(s.id, 'isConfirmed', e.target.checked)}
-                      className="w-4 h-4 cursor-pointer"
-                    />
-                    {s.needsConfirmationReminder && (
-                      <div className="text-xs text-red-600 mt-1">⚠️ Overdue</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      s.documentsComplete
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {s.documentsCount}/{s.totalDocuments}
+        <div className="grid grid-cols-1 gap-4">
+          {staff.map((s) => {
+            const missing = getMissingDocs(s);
+            const percent = getCompletionPercent(s);
+
+            return (
+              <div key={s.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold text-slate-900">{s.fullName}</h3>
+                      {s.needsConfirmationReminder && (
+                        <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">Overdue</span>
+                      )}
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-center text-sm">
-                    {s.daysSinceResumption} days
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <button
-                      onClick={() => setSelectedStaff(s)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      Manage
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <div className="text-sm text-slate-500">
+                      {s.department} · {s.position}
+                    </div>
+                    <div className="text-xs text-slate-400">Staff ID: {s.staffId || 'Not set'}</div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                      s.documentsComplete
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {s.documentsComplete ? 'Complete' : 'Incomplete'}
+                    </div>
+                    <div className="mt-2 text-xs text-slate-500">{s.daysSinceResumption} days active</div>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span>Documents {s.documentsCount}/{s.totalDocuments}</span>
+                    <span>{percent}%</span>
+                  </div>
+                  <div className="mt-2 h-2 w-full rounded-full bg-slate-100">
+                    <div
+                      className={`h-2 rounded-full ${s.documentsComplete ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="text-xs font-semibold text-slate-500">Missing documents</div>
+                  {missing.length === 0 ? (
+                    <div className="mt-2 text-sm text-emerald-700">All documents submitted.</div>
+                  ) : (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {missing.map((doc) => (
+                        <span key={doc.key} className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">
+                          {doc.short}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                    <label className="inline-flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={s.offerLetterGiven}
+                        onChange={(e) => handleQuickUpdate(s.id, 'offerLetterGiven', e.target.checked)}
+                        className="h-4 w-4"
+                      />
+                      Offer Letter
+                    </label>
+                    <label className="inline-flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={s.isConfirmed}
+                        onChange={(e) => handleQuickUpdate(s.id, 'isConfirmed', e.target.checked)}
+                        className="h-4 w-4"
+                      />
+                      Confirmed
+                    </label>
+                  </div>
+                  <button
+                    onClick={() => setSelectedStaff(s)}
+                    className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                  >
+                    Manage Checklist
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
