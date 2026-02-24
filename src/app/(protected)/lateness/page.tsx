@@ -43,7 +43,7 @@ export default function LatenessPage() {
 
   return (
     <section className="card">
-      <h1>Lateness Log</h1>
+      <h1 style={{ fontSize: "clamp(18px, 5vw, 32px)" }}>Lateness Log</h1>
 
       {isLoading ? (
         <p className="muted" style={{ marginTop: "8px" }}>Loading...</p>

@@ -21,11 +21,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const daysThreshold = parseInt(searchParams.get('days') || '180'); // Default 6 months = 180 days
 
-    // Get staff who are not confirmed
-    const staff = await prisma.staff.findMany({
+    // Get ALL staff (both confirmed and unconfirmed)
+    const allStaff = await prisma.staff.findMany({
       where: {
         OR: [{ status: { not: 'INACTIVE' } }, { status: null }],
-        isConfirmed: false,
       },
       select: {
         id: true,
@@ -45,9 +44,9 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Calculate days since resumption and filter
+    // Calculate days since resumption for all staff
     const now = new Date();
-    const staffWithDays = staff.map((s: StaffBasic) => {
+    const staffWithDays = allStaff.map((s: StaffBasic) => {
       const daysSinceResumption = Math.floor(
         (now.getTime() - new Date(s.resumptionDate).getTime()) / (1000 * 60 * 60 * 24)
       );
@@ -57,22 +56,23 @@ export async function GET(request: NextRequest) {
         ...s,
         daysSinceResumption,
         monthsSinceResumption,
-        needsConfirmation: daysSinceResumption >= daysThreshold
+        needsConfirmation: !s.isConfirmed && daysSinceResumption >= daysThreshold
       };
     });
 
-    // Filter to only those needing confirmation
+    // Filter to only those needing confirmation (unconfirmed and past threshold)
     const needingConfirmation = staffWithDays.filter(s => s.needsConfirmation);
 
     // Group by urgency level
     const critical = needingConfirmation.filter(s => s.monthsSinceResumption >= 9); // 9+ months
     const urgent = needingConfirmation.filter(s => s.monthsSinceResumption >= 6 && s.monthsSinceResumption < 9); // 6-9 months
     const approaching = staffWithDays.filter(s => 
-      s.monthsSinceResumption >= 5 && s.monthsSinceResumption < 6
+      !s.isConfirmed && s.monthsSinceResumption >= 5 && s.monthsSinceResumption < 6
     ); // Almost 6 months
 
     return NextResponse.json({
       reminders: needingConfirmation,
+      allStaff: staffWithDays,
       summary: {
         total: needingConfirmation.length,
         critical: critical.length,

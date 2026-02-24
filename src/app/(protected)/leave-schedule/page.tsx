@@ -345,8 +345,8 @@ export default function LeaveSchedulePage() {
     <div className="container">
       <div className="header-section">
         <div>
-          <h1>Leave Schedule Management</h1>
-          <p className="text-muted" style={{ marginTop: "0.5rem" }}>
+          <h1 style={{ fontSize: "clamp(20px, 5vw, 32px)", margin: "0" }}>Leave Schedule Management</h1>
+          <p className="text-muted" style={{ marginTop: "0.5rem", fontSize: "clamp(12px, 3vw, 14px)" }}>
             {eligibleStaff.length} eligible staff found (must have 1+ year tenure)
           </p>
         </div>
@@ -355,6 +355,7 @@ export default function LeaveSchedulePage() {
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
             className="input"
+            style={{ minHeight: "44px" }}
           >
             {[2024, 2025, 2026, 2027, 2028].map((year) => (
               <option key={year} value={year}>
@@ -369,6 +370,7 @@ export default function LeaveSchedulePage() {
                 onClick={handleAutoGenerate}
                 disabled={loading}
                 title="Auto-generate leave schedules for all eligible staff"
+                style={{ minHeight: "44px", minWidth: "100px" }}
               >
                 🪄 Auto-Generate Schedule
               </button>
@@ -377,12 +379,14 @@ export default function LeaveSchedulePage() {
                 onClick={handleClearAll}
                 disabled={loading}
                 title="Delete all leave schedules for this year"
+                style={{ minHeight: "44px", minWidth: "80px" }}
               >
                 🗑️ Clear All
               </button>
               <button
                 className="btn-primary"
                 onClick={() => setShowAddForm(true)}
+                style={{ minHeight: "44px", minWidth: "100px" }}
               >
                 + Add Manually
               </button>
@@ -391,6 +395,7 @@ export default function LeaveSchedulePage() {
                 onClick={handleExportToExcel}
                 disabled={loading || leaveSchedules.length === 0}
                 title="Export leave schedules to Excel"
+                style={{ minHeight: "44px", minWidth: "110px" }}
               >
                 📥 Export to Excel
               </button>
@@ -668,7 +673,7 @@ export default function LeaveSchedulePage() {
         .container {
           max-width: 1400px;
           margin: 0 auto;
-          padding: 2rem;
+          padding: clamp(12px, 3vw, 32px);
         }
 
         .header-section {
@@ -676,17 +681,54 @@ export default function LeaveSchedulePage() {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 2rem;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+          .header-section {
+            flex-direction: column;
+            align-items: flex-start;
+          }
         }
 
         .actions {
           display: flex;
-          gap: 1rem;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+          .actions {
+            width: 100%;
+            flex-direction: column;
+          }
+
+          .actions button,
+          .actions select {
+            flex: 1 1 auto;
+            min-width: 120px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .container {
+            padding: 8px;
+          }
+
+          .actions button,
+          .actions select {
+            width: 100%;
+            font-size: 12px;
+            padding: 10px 8px;
+          }
         }
 
         .alert {
-          padding: 1rem;
+          padding: clamp(8px, 2vw, 16px);
           border-radius: 4px;
           margin-bottom: 1rem;
+          font-size: clamp(12px, 2vw, 14px);
         }
 
         .alert-error {
@@ -711,7 +753,7 @@ export default function LeaveSchedulePage() {
           background: white;
           border-radius: 8px;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          padding: 1.5rem;
+          padding: clamp(12px, 3vw, 24px);
           margin-bottom: 2rem;
         }
 
@@ -721,17 +763,25 @@ export default function LeaveSchedulePage() {
 
         .card-header h2 {
           margin: 0 0 0.5rem 0;
+          font-size: clamp(16px, 4vw, 20px);
         }
 
         .text-muted {
           color: #666;
+          font-size: clamp(12px, 2vw, 14px);
         }
 
         .form-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 1.5rem;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: clamp(12px, 2vw, 24px);
           margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 480px) {
+          .form-grid {
+            grid-template-columns: 1fr;
+          }
         }
 
         .form-group {
@@ -742,6 +792,7 @@ export default function LeaveSchedulePage() {
         .form-group label {
           margin-bottom: 0.5rem;
           font-weight: 500;
+          font-size: clamp(12px, 2vw, 14px);
         }
 
         .help-text {
@@ -754,6 +805,17 @@ export default function LeaveSchedulePage() {
           display: flex;
           gap: 1rem;
           justify-content: flex-end;
+          flex-wrap: wrap;
+        }
+
+        @media (max-width: 480px) {
+          .form-actions {
+            flex-direction: column;
+          }
+
+          .form-actions button {
+            width: 100%;
+          }
         }
 
         .input {
@@ -777,7 +839,7 @@ export default function LeaveSchedulePage() {
           border: none;
           border-radius: 4px;
           cursor: pointer;
-          font-size: 1rem;
+          font-size: clamp(12px, 2vw, 14px);
           transition: all 0.2s;
         }
 
@@ -809,8 +871,6 @@ export default function LeaveSchedulePage() {
           opacity: 0.6;
           cursor: not-allowed;
         }
-          color: white;
-        }
 
         .btn-danger {
           background-color: #dc3545;
@@ -829,11 +889,12 @@ export default function LeaveSchedulePage() {
         .table {
           width: 100%;
           border-collapse: collapse;
+          font-size: clamp(11px, 2vw, 14px);
         }
 
         .table th,
         .table td {
-          padding: 0.75rem;
+          padding: clamp(6px, 1vw, 12px);
           text-align: left;
           border-bottom: 1px solid #ddd;
         }
@@ -846,6 +907,17 @@ export default function LeaveSchedulePage() {
         .action-buttons {
           display: flex;
           gap: 0.5rem;
+          flex-wrap: wrap;
+        }
+
+        @media (max-width: 480px) {
+          .action-buttons {
+            flex-direction: column;
+          }
+
+          .action-buttons button {
+            width: 100%;
+          }
         }
 
         @media print {

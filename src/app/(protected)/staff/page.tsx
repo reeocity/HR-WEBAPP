@@ -224,24 +224,24 @@ export default function StaffListPage() {
 
   return (
     <div className="grid" style={{ gap: "24px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-        <div>
-          <h1 style={{ margin: "0" }}>Staff Management</h1>
-          <p className="muted" style={{ margin: "8px 0 0 0" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 auto", minWidth: "250px" }}>
+          <h1 style={{ margin: "0", fontSize: "clamp(20px, 5vw, 32px)" }}>Staff Management</h1>
+          <p className="muted" style={{ margin: "8px 0 0 0", fontSize: "clamp(12px, 3vw, 14px)" }}>
             Upload the official Excel file to create or update staff records.
           </p>
         </div>
-        <Link href="/" className="button secondary" style={{ textDecoration: "none" }}>
+        <Link href="/" className="button secondary" style={{ textDecoration: "none", minHeight: "44px", minWidth: "120px", whiteSpace: "nowrap" }}>
           ← Back to Dashboard
         </Link>
       </div>
 
       <section className="card">
-        <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-          <button className="button" onClick={() => setShowUpload(true)}>
+        <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", flexWrap: "wrap" }}>
+          <button className="button" onClick={() => setShowUpload(true)} style={{ minHeight: "44px", minWidth: "100px" }}>
             📤 Upload Excel
           </button>
-          <button className="button secondary" onClick={() => setShowAdd(true)}>
+          <button className="button secondary" onClick={() => setShowAdd(true)} style={{ minHeight: "44px", minWidth: "100px" }}>
             ➕ Add Staff
           </button>
         </div>
@@ -266,7 +266,7 @@ export default function StaffListPage() {
       </section>
 
       <section className="card">
-        <h2>Staff Records</h2>
+        <h2 style={{ fontSize: "clamp(16px, 4vw, 20px)" }}>Staff Records</h2>
         {isLoadingStaff ? (
           <p className="muted" style={{ marginTop: "8px" }}>Loading staff...</p>
         ) : staffError ? (
@@ -311,6 +311,7 @@ export default function StaffListPage() {
                           event.stopPropagation();
                           handleDeleteStaff(row.id);
                         }}
+                        style={{ minHeight: "44px", minWidth: "70px" }}
                       >
                         Delete
                       </button>
@@ -323,7 +324,7 @@ export default function StaffListPage() {
         )}
 
         <div style={{ marginTop: "16px" }}>
-          <Link className="button secondary" href="/staff/preview">
+          <Link className="button secondary" href="/staff/preview" style={{ minHeight: "44px" }}>
             Open staff profile placeholder
           </Link>
         </div>
@@ -340,30 +341,30 @@ export default function StaffListPage() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "24px",
+            padding: "12px",
             zIndex: 50,
           }}
           onClick={closeAdd}
         >
           <div
             className="card"
-            style={{ maxWidth: "640px", width: "100%" }}
+            style={{ maxWidth: "640px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}
             onClick={(event) => event.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3>Add Staff</h3>
-              <button className="button secondary" onClick={closeAdd}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+              <h3 style={{ margin: "0", fontSize: "clamp(16px, 4vw, 20px)" }}>Add Staff</h3>
+              <button className="button secondary" onClick={closeAdd} style={{ minHeight: "44px", minWidth: "70px" }}>
                 Close
               </button>
             </div>
 
             <div className="grid grid-2" style={{ marginTop: "16px", gap: "12px" }}>
               <label>
-                <span className="muted">Full Name</span>
+                <span className="muted" style={{ fontSize: "12px" }}>Full Name</span>
                 <input className="input" value={newFullName} onChange={(e) => setNewFullName(e.target.value)} />
               </label>
               <label>
-                <span className="muted">Department</span>
+                <span className="muted" style={{ fontSize: "12px" }}>Department</span>
                 <select className="select" value={newDepartment} onChange={(e) => setNewDepartment(e.target.value)}>
                   <option value="">Select department</option>
                   {departments.map((d) => (
@@ -372,7 +373,7 @@ export default function StaffListPage() {
                 </select>
               </label>
               <label>
-                <span className="muted">Position</span>
+                <span className="muted" style={{ fontSize: "12px" }}>Position</span>
                 <select className="select" value={newPosition} onChange={(e) => setNewPosition(e.target.value)}>
                   <option value="">Select position</option>
                   {positions.map((p) => (
@@ -381,7 +382,7 @@ export default function StaffListPage() {
                 </select>
               </label>
               <label>
-                <span className="muted">Status</span>
+                <span className="muted" style={{ fontSize: "12px" }}>Status</span>
                 <select
                   className="select"
                   value={newStatus}
@@ -399,7 +400,7 @@ export default function StaffListPage() {
                 </select>
               </label>
               <label>
-                <span className="muted">Inactive Reason</span>
+                <span className="muted" style={{ fontSize: "12px" }}>Inactive Reason</span>
                 <select
                   className="select"
                   value={newInactiveReason}
@@ -414,7 +415,7 @@ export default function StaffListPage() {
                 </select>
               </label>
               <label>
-                <span className="muted">Last Active Day</span>
+                <span className="muted" style={{ fontSize: "12px" }}>Last Active Day</span>
                 <input
                   className="input"
                   type="date"
@@ -424,30 +425,31 @@ export default function StaffListPage() {
                 />
               </label>
               <label>
-                <span className="muted">Phone</span>
+                <span className="muted" style={{ fontSize: "12px" }}>Phone</span>
                 <input className="input" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} />
               </label>
               <label>
-                <span className="muted">Account Number</span>
+                <span className="muted" style={{ fontSize: "12px" }}>Account Number</span>
                 <input className="input" placeholder="e.g., 0123456789" value={newAccountNumber} onChange={(e) => setNewAccountNumber(e.target.value)} />
               </label>
               <label>
-                <span className="muted">Resumption Date</span>
+                <span className="muted" style={{ fontSize: "12px" }}>Resumption Date</span>
                 <input className="input" type="date" value={newResumptionDate} onChange={(e) => setNewResumptionDate(e.target.value)} />
               </label>
               <label>
-                <span className="muted">Monthly Salary</span>
+                <span className="muted" style={{ fontSize: "12px" }}>Monthly Salary</span>
                 <input className="input" type="number" placeholder="e.g., 150000" value={newSalary} onChange={(e) => setNewSalary(e.target.value)} />
               </label>
             </div>
 
-            {createMessage ? <p className="muted" style={{ marginTop: "8px" }}>{createMessage}</p> : null}
+            {createMessage ? <p className="muted" style={{ marginTop: "8px", fontSize: "12px" }}>{createMessage}</p> : null}
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "16px" }}>
-              <button className="button secondary" onClick={closeAdd}>Cancel</button>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "16px", flexWrap: "wrap" }}>
+              <button className="button secondary" onClick={closeAdd} style={{ minHeight: "44px", minWidth: "70px" }}>Cancel</button>
               <button
                 className="button"
                 onClick={handleCreateStaff}
+                style={{ minHeight: "44px", minWidth: "100px", flex: "1 1 auto" }}
                 disabled={
                   !newFullName ||
                   !newDepartment ||
@@ -475,23 +477,23 @@ export default function StaffListPage() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "24px",
+            padding: "12px",
             zIndex: 50,
           }}
           onClick={closeUpload}
         >
           <div
             className="card"
-            style={{ maxWidth: "520px", width: "100%" }}
+            style={{ maxWidth: "520px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}
             onClick={(event) => event.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3>Upload Staff Excel</h3>
-              <button className="button secondary" onClick={closeUpload}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+              <h3 style={{ margin: "0", fontSize: "clamp(16px, 4vw, 20px)" }}>Upload Staff Excel</h3>
+              <button className="button secondary" onClick={closeUpload} style={{ minHeight: "44px", minWidth: "70px" }}>
                 Close
               </button>
             </div>
-            <p className="muted" style={{ marginTop: "8px" }}>
+            <p className="muted" style={{ marginTop: "8px", fontSize: "12px" }}>
               Only .xlsx files are accepted. Import will preview before saving.
             </p>
             <div style={{ marginTop: "16px" }}>
@@ -502,40 +504,41 @@ export default function StaffListPage() {
                 onChange={(event) => setFile(event.target.files?.[0] ?? null)}
               />
               {fileName ? (
-                <p className="muted" style={{ marginTop: "8px" }}>
+                <p className="muted" style={{ marginTop: "8px", fontSize: "12px" }}>
                   Selected: {fileName}
                 </p>
               ) : null}
               {previewData ? (
                 <div style={{ marginTop: "12px" }}>
-                  <p className="muted">New: {previewData.newCount}</p>
-                  <p className="muted">Updated: {previewData.updateCount}</p>
-                  <p className="muted">Errors: {previewData.errorCount}</p>
-                  <p className="muted">Missing guarantors: {previewData.missingGuarantorCount}</p>
+                  <p className="muted" style={{ fontSize: "12px" }}>New: {previewData.newCount}</p>
+                  <p className="muted" style={{ fontSize: "12px" }}>Updated: {previewData.updateCount}</p>
+                  <p className="muted" style={{ fontSize: "12px" }}>Errors: {previewData.errorCount}</p>
+                  <p className="muted" style={{ fontSize: "12px" }}>Missing guarantors: {previewData.missingGuarantorCount}</p>
                   {previewData.errorCount > 0 ? (
-                    <button className="button secondary" style={{ marginTop: "8px" }} onClick={handleDownloadErrors}>
+                    <button className="button secondary" style={{ marginTop: "8px", minHeight: "44px" }} onClick={handleDownloadErrors}>
                       Download error CSV
                     </button>
                   ) : null}
                 </div>
               ) : null}
               {previewMessage ? (
-                <p className="muted" style={{ marginTop: "8px" }}>
+                <p className="muted" style={{ marginTop: "8px", fontSize: "12px" }}>
                   {previewMessage}
                 </p>
               ) : null}
             </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "20px" }}>
-              <button className="button secondary" onClick={closeUpload}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "20px", flexWrap: "wrap" }}>
+              <button className="button secondary" onClick={closeUpload} style={{ minHeight: "44px", minWidth: "70px" }}>
                 Cancel
               </button>
-              <button className="button secondary" onClick={handlePreview} disabled={!file || isPreviewing}>
+              <button className="button secondary" onClick={handlePreview} disabled={!file || isPreviewing} style={{ minHeight: "44px", flex: "1 1 auto" }}>
                 {isPreviewing ? "Previewing..." : "Preview Import"}
               </button>
               <button
                 className="button"
                 onClick={handleConfirm}
                 disabled={!file || !previewData || previewData.errorCount > 0 || isConfirming}
+                style={{ minHeight: "44px", flex: "1 1 auto" }}
               >
                 {isConfirming ? "Importing..." : "Confirm Import"}
               </button>

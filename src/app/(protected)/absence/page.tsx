@@ -43,7 +43,7 @@ export default function AbsencePage() {
 
   return (
     <section className="card">
-      <h1>Absence Log</h1>
+      <h1 style={{ fontSize: "clamp(18px, 5vw, 32px)" }}>Absence Log</h1>
 
       {isLoading ? (
         <p className="muted" style={{ marginTop: "8px" }}>Loading...</p>

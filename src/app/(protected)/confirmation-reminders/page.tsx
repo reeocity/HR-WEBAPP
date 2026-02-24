@@ -31,10 +31,11 @@ interface Grouped {
 
 export default function ConfirmationRemindersPage() {
   const [reminders, setReminders] = useState<ConfirmationReminder[]>([]);
+  const [allStaff, setAllStaff] = useState<ConfirmationReminder[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [grouped, setGrouped] = useState<Grouped | null>(null);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'all' | 'critical' | 'urgent' | 'approaching'>('all');
+  const [view, setView] = useState<'all' | 'critical' | 'urgent' | 'approaching' | 'confirmed'>('all');
 
   useEffect(() => {
     fetchReminders();
@@ -48,6 +49,7 @@ export default function ConfirmationRemindersPage() {
       setReminders(data.reminders);
       setSummary(data.summary);
       setGrouped(data.grouped);
+      setAllStaff(data.allStaff || data.reminders);
     } catch (error) {
       console.error('Error fetching confirmation reminders:', error);
     } finally {
@@ -85,6 +87,8 @@ export default function ConfirmationRemindersPage() {
         return grouped.urgent;
       case 'approaching':
         return grouped.approaching;
+      case 'confirmed':
+        return allStaff.filter(staff => staff.isConfirmed);
       default:
         return reminders;
     }
@@ -99,179 +103,141 @@ export default function ConfirmationRemindersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-50 to-white">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-12">
-        {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 md:p-12 shadow-xl">
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -right-32 -top-32 h-64 w-64 rounded-full bg-rose-500/20 blur-3xl" />
-            <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-amber-500/20 blur-3xl" />
-          </div>
-          <div className="relative z-10 flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-rose-300/80">Confirmation Tracker</p>
-              <h1 className="mt-4 text-4xl md:text-5xl font-bold text-white">Staff Confirmation</h1>
-              <p className="mt-3 max-w-lg text-sm md:text-base text-slate-300">Track and manage staff confirmations. Flag critical cases that need immediate action.</p>
-            </div>
-            {summary && (
-              <div className="grid grid-cols-3 gap-3 md:gap-4">
-                <div className="rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-3">
-                  <div className="text-xs text-slate-300">Total</div>
-                  <div className="text-3xl md:text-4xl font-bold text-white mt-1">{summary.total}</div>
-                </div>
-                <div className="rounded-xl bg-rose-500/20 backdrop-blur-sm border border-rose-400/30 px-4 py-3">
-                  <div className="text-xs text-rose-200">Critical</div>
-                  <div className="text-3xl md:text-4xl font-bold text-rose-100 mt-1">{summary.critical}</div>
-                </div>
-                <div className="rounded-xl bg-amber-500/20 backdrop-blur-sm border border-amber-400/30 px-4 py-3">
-                  <div className="text-xs text-amber-200">Urgent</div>
-                  <div className="text-3xl md:text-4xl font-bold text-amber-100 mt-1">{summary.urgent}</div>
-                </div>
-              </div>
-            )}
-          </div>
+    <div className="container">
+      <section className="card">
+        <div style={{ marginBottom: "20px" }}>
+          <h1>Staff Confirmation</h1>
+          <p className="muted" style={{ marginTop: "4px" }}>Track staff awaiting manual confirmation</p>
         </div>
 
-        <div className="flex flex-col gap-6">
-          {/* Stats Cards */}
-          {summary && (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition">
-                <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Pending</div>
-                <div className="text-3xl font-bold text-slate-900 mt-2">{summary.total}</div>
-              </div>
-              <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-5 shadow-sm hover:shadow-md transition">
-                <div className="text-xs font-semibold uppercase tracking-wider text-rose-600">Critical (9+ mo)</div>
-                <div className="text-3xl font-bold text-rose-900 mt-2">{summary.critical}</div>
-              </div>
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-5 shadow-sm hover:shadow-md transition">
-                <div className="text-xs font-semibold uppercase tracking-wider text-amber-600">Urgent (6-9 mo)</div>
-                <div className="text-3xl font-bold text-amber-900 mt-2">{summary.urgent}</div>
-              </div>
-              <div className="rounded-2xl border border-yellow-200 bg-yellow-50/80 p-5 shadow-sm hover:shadow-md transition">
-                <div className="text-xs font-semibold uppercase tracking-wider text-yellow-600">Approaching</div>
-                <div className="text-3xl font-bold text-yellow-900 mt-2">{summary.approaching}</div>
-              </div>
+        {summary && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px", marginBottom: "24px" }}>
+            <div style={{ background: "rgba(255, 255, 255, 0.5)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(148, 163, 184, 0.35)" }}>
+              <div className="muted" style={{ fontSize: "11px", marginBottom: "6px" }}>TOTAL PENDING</div>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#0f172a" }}>{summary.total}</div>
             </div>
-          )}
-
-          {/* Filter Buttons */}
-          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
-            {(
-              [
-                { id: 'all', label: 'All' },
-                { id: 'critical', label: 'Critical' },
-                { id: 'urgent', label: 'Urgent' },
-                { id: 'approaching', label: 'Approaching' },
-              ] as const
-            ).map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setView(item.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                  view === item.id
-                    ? 'bg-slate-900 text-white shadow-lg'
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+            <div style={{ background: "rgba(244, 63, 94, 0.1)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(244, 63, 94, 0.4)" }}>
+              <div className="muted" style={{ fontSize: "11px", marginBottom: "6px", color: "#9f1239" }}>CRITICAL (9+ MO)</div>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#9f1239" }}>{summary.critical}</div>
+            </div>
+            <div style={{ background: "rgba(217, 119, 6, 0.1)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(217, 119, 6, 0.4)" }}>
+              <div className="muted" style={{ fontSize: "11px", marginBottom: "6px", color: "#9a3412" }}>URGENT (6-9 MO)</div>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#9a3412" }}>{summary.urgent}</div>
+            </div>
+            <div style={{ background: "rgba(250, 204, 21, 0.1)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(250, 204, 21, 0.4)" }}>
+              <div className="muted" style={{ fontSize: "11px", marginBottom: "6px", color: "#b45309" }}>APPROACHING</div>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#b45309" }}>{summary.approaching}</div>
+            </div>
+            <div style={{ background: "rgba(34, 197, 94, 0.1)", padding: "12px", borderRadius: "10px", border: "1px solid rgba(34, 197, 94, 0.4)" }}>
+              <div className="muted" style={{ fontSize: "11px", marginBottom: "6px", color: "#166534" }}>CONFIRMED</div>
+              <div style={{ fontSize: "24px", fontWeight: "bold", color: "#166534" }}>{allStaff.filter(s => s.isConfirmed).length}</div>
+            </div>
           </div>
+        )}
 
-          {loading ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white py-16 text-center text-slate-400">
-              Loading reminders...
-            </div>
-          ) : getDisplayReminders().length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-white py-16 text-center text-slate-400">
-              No staff pending confirmation in this category.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {getDisplayReminders().map((staff) => {
-                const urgencyLevel =
-                  staff.monthsSinceResumption >= 9 ? 'critical' :
-                  staff.monthsSinceResumption >= 6 ? 'urgent' : 'approaching';
+        {/* Filter Buttons */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
+          {(
+            [
+              { id: 'all', label: 'All Pending' },
+              { id: 'critical', label: 'Critical' },
+              { id: 'urgent', label: 'Urgent' },
+              { id: 'approaching', label: 'Approaching' },
+              { id: 'confirmed', label: 'Confirmed' },
+            ] as const
+          ).map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setView(item.id)}
+              className={view === item.id ? 'button' : 'button secondary'}
+              style={{ fontSize: '12px' }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
 
-                const urgencyConfig = {
-                  critical: {
-                    badge: 'border-rose-300 bg-rose-50 text-rose-700',
-                    accent: 'border-rose-200 bg-rose-50/50',
-                    icon: '⚠️'
-                  },
-                  urgent: {
-                    badge: 'border-amber-300 bg-amber-50 text-amber-700',
-                    accent: 'border-amber-200 bg-amber-50/50',
-                    icon: '⚡'
-                  },
-                  approaching: {
-                    badge: 'border-yellow-300 bg-yellow-50 text-yellow-700',
-                    accent: 'border-yellow-200 bg-yellow-50/50',
-                    icon: '⏰'
-                  }
-                };
+        {loading ? (
+          <p className="muted" style={{ marginTop: "12px" }}>Loading confirmation reminders...</p>
+        ) : getDisplayReminders().length === 0 ? (
+          <p className="muted" style={{ marginTop: "12px" }}>
+            {view === 'confirmed' ? 'No confirmed staff yet.' : 'No staff pending confirmation in this category.'}
+          </p>
+        ) : (
+          <div style={{ marginTop: "12px", overflowX: "auto" }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Staff ID</th>
+                  <th>Full Name</th>
+                  <th>Department</th>
+                  <th>Position</th>
+                  <th>Days Employed</th>
+                  <th>Months Employed</th>
+                  {view !== 'confirmed' && <th>Status</th>}
+                  <th>Offer Letter</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {getDisplayReminders().map((staff) => {
+                  const urgencyLevel =
+                    staff.monthsSinceResumption >= 9 ? 'critical' :
+                    staff.monthsSinceResumption >= 6 ? 'urgent' : 'approaching';
 
-                return (
-                  <div key={staff.id} className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-200">
-                    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <div>
-                            <h3 className="text-lg font-semibold text-slate-900">{staff.fullName}</h3>
-                            <p className="text-sm text-slate-600 mt-1">{staff.department} • {staff.position}</p>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex items-center gap-2">
-                          <span className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold ${urgencyConfig[urgencyLevel].badge}`}>
-                            <span>{urgencyConfig[urgencyLevel].icon}</span>
+                  const getStatusBadge = (level: string) => {
+                    const styles = {
+                      critical: { background: "rgba(244, 63, 94, 0.15)", color: "#9f1239", border: "1px solid rgba(244, 63, 94, 0.4)" },
+                      urgent: { background: "rgba(217, 119, 6, 0.15)", color: "#9a3412", border: "1px solid rgba(217, 119, 6, 0.4)" },
+                      approaching: { background: "rgba(250, 204, 21, 0.15)", color: "#b45309", border: "1px solid rgba(250, 204, 21, 0.4)" },
+                    };
+                    return styles[level as keyof typeof styles] || styles.approaching;
+                  };
+
+                  const badge = getStatusBadge(urgencyLevel);
+
+                  return (
+                    <tr key={staff.id}>
+                      <td style={{ fontWeight: "600" }}>{staff.staffId || "—"}</td>
+                      <td>{staff.fullName}</td>
+                      <td>{staff.department}</td>
+                      <td>{staff.position}</td>
+                      <td>{staff.daysSinceResumption}</td>
+                      <td style={{ fontWeight: "600", fontSize: "16px" }}>{staff.monthsSinceResumption} mo</td>
+                      {view !== 'confirmed' && (
+                        <td>
+                          <span style={{ ...badge, padding: "4px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", display: "inline-block" }}>
                             {urgencyLevel.toUpperCase()}
                           </span>
-                          <span className="text-xs text-slate-500">{staff.staffId ? `ID: ${staff.staffId}` : 'Staff ID not assigned'}</span>
-                        </div>
-                        <div className="mt-3 flex flex-col gap-1 text-sm text-slate-600">
-                          <span>📅 Resumed: {formatDate(staff.resumptionDate)}</span>
-                          {staff.phone && <span>📞 {staff.phone}</span>}
-                        </div>
-                      </div>
-
-                      <div className={`flex flex-col items-start lg:items-end gap-3 rounded-xl border p-4 ${urgencyConfig[urgencyLevel].accent}`}>
-                        <div className="text-right">
-                          <div className="text-4xl font-bold text-slate-900">{staff.monthsSinceResumption}</div>
-                          <div className="text-xs text-slate-600 mt-0.5">months employed</div>
-                          <div className="text-xs text-slate-500 mt-1">{staff.daysSinceResumption} days</div>
-                        </div>
-                        <div className="w-full border-t border-slate-200/50 pt-3">
-                          <span className="inline-block text-xs font-semibold text-slate-600">
-                            Offer Letter: <span className={staff.offerLetterGiven ? 'text-emerald-600 font-bold' : 'text-slate-400'}>
-                              {staff.offerLetterGiven ? '✓ Given' : '✗ Pending'}
-                            </span>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-end">
-                      <button
-                        onClick={() => confirmStaff(staff.id)}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 hover:shadow-lg transition-all duration-200 order-2 sm:order-1"
-                      >
-                        ✓ Confirm
-                      </button>
-                      <a
-                        href={`/staff/${staff.staffId}`}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:shadow-md transition-all duration-200 order-1 sm:order-2"
-                      >
-                        👤 Profile
-                      </a>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
+                        </td>
+                      )}
+                      <td>{staff.offerLetterGiven ? "✓ Yes" : "✗ No"}</td>
+                      <td style={{ textAlign: "right" }}>
+                        {view !== 'confirmed' && (
+                          <button 
+                            onClick={() => confirmStaff(staff.id)}
+                            className="button secondary"
+                            style={{ fontSize: "11px", padding: "6px 12px", marginRight: "4px" }}
+                          >
+                            Confirm
+                          </button>
+                        )}
+                        <a 
+                          href={`/staff/${staff.id}`}
+                          className="button secondary"
+                          style={{ fontSize: "11px", padding: "6px 12px" }}
+                        >
+                          View
+                        </a>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
