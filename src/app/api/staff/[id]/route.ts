@@ -50,19 +50,42 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   const { id } = await context.params;
   const body = await request.json();
 
+  const updateData: any = {
+    staffId: body.staffId ?? null,
+    fullName: body.fullName,
+    department: body.department,
+    position: body.position,
+    status: body.status,
+    inactiveReason: body.status === "INACTIVE" ? body.inactiveReason ?? null : null,
+    lastActiveDate: body.status === "INACTIVE" && body.lastActiveDate ? new Date(body.lastActiveDate) : null,
+    phone: body.phone,
+    resumptionDate: new Date(body.resumptionDate),
+  };
+
+  // Handle optional confirmation and document fields
+  if (typeof body.isConfirmed === 'boolean') {
+    updateData.isConfirmed = body.isConfirmed;
+    if (body.isConfirmed && body.confirmationDate) {
+      updateData.confirmationDate = new Date(body.confirmationDate);
+    }
+  }
+
+  if (typeof body.offerLetterGiven === 'boolean') {
+    updateData.offerLetterGiven = body.offerLetterGiven;
+    if (body.offerLetterGiven && body.offerLetterDate) {
+      updateData.offerLetterDate = new Date(body.offerLetterDate);
+    }
+  }
+
+  if (typeof body.hasValidId === 'boolean') updateData.hasValidId = body.hasValidId;
+  if (typeof body.hasProofOfAddress === 'boolean') updateData.hasProofOfAddress = body.hasProofOfAddress;
+  if (typeof body.hasPassportPhotos === 'boolean') updateData.hasPassportPhotos = body.hasPassportPhotos;
+  if (typeof body.hasQualification === 'boolean') updateData.hasQualification = body.hasQualification;
+  if (typeof body.hasGuarantorForms === 'boolean') updateData.hasGuarantorForms = body.hasGuarantorForms;
+
   const staff = await prisma.staff.update({
     where: { id },
-    data: {
-      staffId: body.staffId ?? null,
-      fullName: body.fullName,
-      department: body.department,
-      position: body.position,
-      status: body.status,
-      inactiveReason: body.status === "INACTIVE" ? body.inactiveReason ?? null : null,
-      lastActiveDate: body.status === "INACTIVE" && body.lastActiveDate ? new Date(body.lastActiveDate) : null,
-      phone: body.phone,
-      resumptionDate: new Date(body.resumptionDate),
-    },
+    data: updateData,
   });
   return NextResponse.json({ staff });
 }

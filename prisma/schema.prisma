@@ -32,6 +32,22 @@ model Staff {
   accountNumber  String?  @map("account_number")
   bankName       String?  @map("bank_name")
   bankDetails    String?  @map("bank_details")
+  
+  // Confirmation and Onboarding
+  isConfirmed       Boolean   @default(false) @map("is_confirmed")
+  confirmationDate  DateTime? @map("confirmation_date")
+  offerLetterGiven  Boolean   @default(false) @map("offer_letter_given")
+  offerLetterDate   DateTime? @map("offer_letter_date")
+  
+  // Document Submission Tracking
+  hasValidId           Boolean @default(false) @map("has_valid_id")
+  hasProofOfAddress    Boolean @default(false) @map("has_proof_of_address")
+  hasPassportPhotos    Boolean @default(false) @map("has_passport_photos")
+  hasQualification     Boolean @default(false) @map("has_qualification")
+  hasGuarantorForms    Boolean @default(false) @map("has_guarantor_forms")
+  documentsVerifiedAt  DateTime? @map("documents_verified_at")
+  documentsVerifiedBy  String?   @map("documents_verified_by")
+  
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
   createdById    String?  @map("created_by")
