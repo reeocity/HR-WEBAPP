@@ -457,7 +457,7 @@ export default function DashboardPage() {
         >
           <ActionCard
             icon="📋"
-            title="Staff Management"
+            title="Staff Directory"
             description="View, add, or manage staff records"
             href="/staff"
             color="#3b82f6"

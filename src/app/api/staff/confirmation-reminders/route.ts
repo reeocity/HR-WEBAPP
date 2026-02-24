@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     // Get staff who are not confirmed
     const staff = await prisma.staff.findMany({
       where: {
-        status: 'ACTIVE',
+        OR: [{ status: 'ACTIVE' }, { status: null }],
         isConfirmed: false,
       },
       select: {

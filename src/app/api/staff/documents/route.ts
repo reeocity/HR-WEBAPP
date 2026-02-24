@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     const staff = await prisma.staff.findMany({
       where: {
-        status: 'ACTIVE'
+        OR: [{ status: 'ACTIVE' }, { status: null }]
       },
       select: {
         id: true,
