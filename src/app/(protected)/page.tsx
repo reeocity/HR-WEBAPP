@@ -8,6 +8,10 @@ type DashboardStats = {
   activeStaff: number;
   inactiveStaff: number;
   totalDepartments: number;
+  documentsComplete: number;
+  documentsIncomplete: number;
+  pendingConfirmation: number;
+  criticalConfirmations: number;
 };
 
 const StatCard = ({ icon, label, value, color, delay }: { icon: string; label: string; value: number; color: string; delay: number }) => (
@@ -138,15 +142,29 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const res = await fetch("/api/staff/list");
-        const data = await res.json();
-        if (res.ok && data.staff) {
-          const staff = data.staff;
+        const [staffRes, docsRes, confirmRes] = await Promise.all([
+          fetch("/api/staff/list"),
+          fetch("/api/staff/documents?filter=all"),
+          fetch("/api/staff/confirmation-reminders")
+        ]);
+
+        const [staffData, docsData, confirmData] = await Promise.all([
+          staffRes.json(),
+          docsRes.json(),
+          confirmRes.json()
+        ]);
+
+        if (staffRes.ok && staffData.staff) {
+          const staff = staffData.staff;
           setStats({
             totalStaff: staff.length,
-            activeStaff: staff.filter((s: any) => s.status === "ACTIVE").length,
-            inactiveStaff: staff.filter((s: any) => s.status === "INACTIVE").length,
-            totalDepartments: new Set(staff.map((s: any) => s.department)).size,
+            activeStaff: staff.filter((s: { status: string }) => s.status === "ACTIVE").length,
+            inactiveStaff: staff.filter((s: { status: string }) => s.status === "INACTIVE").length,
+            totalDepartments: new Set(staff.map((s: { department: string }) => s.department)).size,
+            documentsComplete: docsData.summary?.complete || 0,
+            documentsIncomplete: docsData.summary?.incomplete || 0,
+            pendingConfirmation: confirmData.summary?.total || 0,
+            criticalConfirmations: confirmData.summary?.critical || 0,
           });
         }
       } catch (error) {
@@ -240,25 +258,175 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Alerts Section */}
+      {!isLoading && stats && (stats.pendingConfirmation > 0 || stats.documentsIncomplete > 0) && (
+        <div style={{ marginBottom: "32px" }}>
+          {stats.criticalConfirmations > 0 && (
+            <div
+              style={{
+                background: "linear-gradient(135deg, #fee2e2, #fef3c7)",
+                border: "1px solid #ef4444",
+                borderRadius: "16px",
+                padding: "20px 24px",
+                marginBottom: "16px",
+                display: "flex",
+                alignItems: "start",
+                gap: "16px",
+              }}
+            >
+              <div style={{ fontSize: "2rem" }}>🚨</div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontWeight: "600", color: "#dc2626", marginBottom: "4px" }}>
+                  Critical Action Required
+                </h3>
+                <p style={{ color: "#7c2d12", marginBottom: "12px" }}>
+                  {stats.criticalConfirmations} staff member{stats.criticalConfirmations !== 1 ? 's have' : ' has'} been employed for 9+ months without confirmation.
+                </p>
+                <Link
+                  href="/confirmation-reminders"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    background: "#dc2626",
+                    color: "white",
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    textDecoration: "none",
+                    fontWeight: "500",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  View Critical Cases →
+                </Link>
+              </div>
+            </div>
+          )}
+          
+          {stats.pendingConfirmation > 0 && stats.criticalConfirmations === 0 && (
+            <div
+              style={{
+                background: "linear-gradient(135deg, #fef3c7, #fef9c3)",
+                border: "1px solid #f59e0b",
+                borderRadius: "16px",
+                padding: "20px 24px",
+                marginBottom: "16px",
+                display: "flex",
+                alignItems: "start",
+                gap: "16px",
+              }}
+            >
+              <div style={{ fontSize: "2rem" }}>⚠️</div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontWeight: "600", color: "#92400e", marginBottom: "4px" }}>
+                  Pending Confirmations
+                </h3>
+                <p style={{ color: "#78350f", marginBottom: "12px" }}>
+                  {stats.pendingConfirmation} staff member{stats.pendingConfirmation !== 1 ? 's need' : ' needs'} confirmation (6+ months employed).
+                </p>
+                <Link
+                  href="/confirmation-reminders"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    background: "#f59e0b",
+                    color: "white",
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    textDecoration: "none",
+                    fontWeight: "500",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  Review Confirmations →
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {stats.documentsIncomplete > 0 && (
+            <div
+              style={{
+                background: "linear-gradient(135deg, #dbeafe, #e0f2fe)",
+                border: "1px solid #3b82f6",
+                borderRadius: "16px",
+                padding: "20px 24px",
+                display: "flex",
+                alignItems: "start",
+                gap: "16px",
+              }}
+            >
+              <div style={{ fontSize: "2rem" }}>📋</div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontWeight: "600", color: "#1e40af", marginBottom: "4px" }}>
+                  Incomplete Documents
+                </h3>
+                <p style={{ color: "#1e3a8a", marginBottom: "12px" }}>
+                  {stats.documentsIncomplete} staff member{stats.documentsIncomplete !== 1 ? 's have' : ' has'} incomplete document submissions.
+                </p>
+                <Link
+                  href="/documents?filter=incomplete"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    background: "#3b82f6",
+                    color: "white",
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    textDecoration: "none",
+                    fontWeight: "500",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  View Incomplete Documents →
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Stats Grid */}
       {isLoading ? (
         <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
           <p>Loading dashboard...</p>
         </div>
       ) : stats ? (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: "20px",
-            marginBottom: "40px",
-          }}
-        >
-          <StatCard icon="👥" label="Total Staff" value={stats.totalStaff} color="#3b82f6" delay={0} />
-          <StatCard icon="✅" label="Active Staff" value={stats.activeStaff} color="#10b981" delay={0.1} />
-          <StatCard icon="⏸️" label="Inactive Staff" value={stats.inactiveStaff} color="#f59e0b" delay={0.2} />
-          <StatCard icon="🏢" label="Departments" value={stats.totalDepartments} color="#8b5cf6" delay={0.3} />
-        </div>
+        <>
+          {/* Primary Stats */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: "20px",
+              marginBottom: "24px",
+            }}
+          >
+            <StatCard icon="👥" label="Total Staff" value={stats.totalStaff} color="#3b82f6" delay={0} />
+            <StatCard icon="✅" label="Active Staff" value={stats.activeStaff} color="#10b981" delay={0.1} />
+            <StatCard icon="⏸️" label="Inactive Staff" value={stats.inactiveStaff} color="#f59e0b" delay={0.2} />
+            <StatCard icon="🏢" label="Departments" value={stats.totalDepartments} color="#8b5cf6" delay={0.3} />
+          </div>
+
+          {/* Document & Confirmation Stats */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+              gap: "20px",
+              marginBottom: "40px",
+            }}
+          >
+            <StatCard icon="📄" label="Documents Complete" value={stats.documentsComplete} color="#06b6d4" delay={0.4} />
+            <StatCard icon="📋" label="Documents Pending" value={stats.documentsIncomplete} color="#f97316" delay={0.5} />
+            <StatCard icon="⚠️" label="Needs Confirmation" value={stats.pendingConfirmation} color="#ef4444" delay={0.6} />
+            {stats.criticalConfirmations > 0 && (
+              <StatCard icon="🚨" label="Critical (9+ months)" value={stats.criticalConfirmations} color="#dc2626" delay={0.7} />
+            )}
+          </div>
+        </>
       ) : null}
 
       {/* Quick Actions */}

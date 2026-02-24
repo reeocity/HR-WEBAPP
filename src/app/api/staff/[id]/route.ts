@@ -50,7 +50,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   const { id } = await context.params;
   const body = await request.json();
 
-  const updateData: any = {
+  const updateData: Record<string, unknown> = {
     staffId: body.staffId ?? null,
     fullName: body.fullName,
     department: body.department,
