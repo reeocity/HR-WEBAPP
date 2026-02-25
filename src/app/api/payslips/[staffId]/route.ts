@@ -154,6 +154,7 @@ export async function GET(request: Request, context: { params: Promise<{ staffId
       oldStaffStatutory,
       defaultChargesTotal,
       newStaffStatutory,
+      totalDeductions: absenceDeduction + latenessDeduction + manualDeductionsTotal + querySurchargeTotal + queryPenaltyDeduction + mealTicketTotal + defaultChargesTotal + newStaffStatutory,
       netSalary,
     },
   });

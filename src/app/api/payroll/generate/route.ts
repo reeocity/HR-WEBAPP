@@ -72,7 +72,8 @@ export async function POST(request: Request) {
     const payslipData = await payslipRes.json();
     const gross = payslipData.totals?.grossSalary || salary;
     const deductions = payslipData.totals?.totalDeductions || 0;
-    const net = gross - deductions;
+    const allowances = payslipData.totals?.allowancesTotal || 0;
+    const net = gross - deductions + allowances;
 
     totalGrossSalary += gross;
     totalDeductions += deductions;
