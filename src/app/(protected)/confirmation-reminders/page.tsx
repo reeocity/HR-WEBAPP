@@ -14,6 +14,7 @@ interface ConfirmationReminder {
   daysSinceResumption: number;
   monthsSinceResumption: number;
   needsConfirmation: boolean;
+  isConfirmed: boolean;
 }
 
 interface Summary {
@@ -92,14 +93,6 @@ export default function ConfirmationRemindersPage() {
       default:
         return reminders;
     }
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
   };
 
   return (

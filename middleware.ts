@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 
 const SESSION_COOKIE = "hr_admin_session";
+const SESSION_DURATION_HOURS = 1;
 
 function getAuthSecret() {
   const secret = process.env.AUTH_SECRET;
@@ -36,10 +37,33 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    await jwtVerify(token, secret);
-    return NextResponse.next();
+    const { payload } = await jwtVerify(token, secret);
+    
+    // Refresh session on each request (sliding window)
+    const issuedAt = Math.floor(Date.now() / 1000);
+    const expiresAt = issuedAt + SESSION_DURATION_HOURS * 60 * 60;
+    
+    const newToken = await new SignJWT(payload)
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt(issuedAt)
+      .setExpirationTime(expiresAt)
+      .sign(secret);
+    
+    const response = NextResponse.next();
+    response.cookies.set(SESSION_COOKIE, newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: SESSION_DURATION_HOURS * 60 * 60,
+      path: "/",
+    });
+    
+    return response;
   } catch {
-    return NextResponse.redirect(new URL("/login", request.url));
+    // Session expired or invalid - redirect to login
+    const response = NextResponse.redirect(new URL("/login", request.url));
+    response.cookies.delete(SESSION_COOKIE);
+    return response;
   }
 }
 

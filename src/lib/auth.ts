@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { jwtVerify, SignJWT } from "jose";
 
 export const SESSION_COOKIE = "hr_admin_session";
-const SESSION_DURATION_DAYS = 7;
+const SESSION_DURATION_HOURS = 1; // Session expires after 1 hour of inactivity
 
 function getAuthSecret() {
   const secret = process.env.AUTH_SECRET;
@@ -20,7 +20,7 @@ export type SessionPayload = {
 export async function createSessionToken(payload: SessionPayload) {
   const secret = getAuthSecret();
   const issuedAt = Math.floor(Date.now() / 1000);
-  const expiresAt = issuedAt + SESSION_DURATION_DAYS * 24 * 60 * 60;
+  const expiresAt = issuedAt + SESSION_DURATION_HOURS * 60 * 60; // 1 hour from now
 
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })

@@ -93,6 +93,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="nav-section">
             <NavLink href="/reports/monthly" icon="📊">Reports</NavLink>
           </div>
+
+          <div className="nav-divider"></div>
+
+          <div className="nav-section">
+            <div className="nav-section-title">Administration</div>
+            <NavLink href="/users" icon="👤">Admin Users</NavLink>
+          </div>
         </nav>
 
         <div className="nav-actions">
