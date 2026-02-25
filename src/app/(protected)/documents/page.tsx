@@ -88,14 +88,6 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleQuickUpdate = async (staffId: string, field: keyof StaffDocument, value: boolean) => {
-    await updateDocumentStatus(staffId, { [field]: value });
-  };
-
-  const getMissingDocs = (staffItem: StaffDocument) => {
-    return documentChecklist.filter((doc) => !staffItem[doc.key]).map((doc) => doc);
-  };
-
   const getCompletionPercent = (staffItem: StaffDocument) => {
     if (!staffItem.totalDocuments) return 0;
     return Math.round((staffItem.documentsCount / staffItem.totalDocuments) * 100);
@@ -180,7 +172,6 @@ export default function DocumentsPage() {
               </thead>
               <tbody>
                 {staff.map((s) => {
-                  const missing = getMissingDocs(s);
                   const percent = getCompletionPercent(s);
 
                   return (

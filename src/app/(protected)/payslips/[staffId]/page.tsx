@@ -86,7 +86,6 @@ export default function PayslipPage() {
   const bankCharges = data?.totals.bankCharges ?? 0;
   const waterRate = data?.totals.waterRate ?? 0;
   const oldStaffStatutory = data?.totals.oldStaffStatutory ?? 0;
-  const defaultChargesTotal = data?.totals.defaultChargesTotal ?? 0;
   const newStaffStatutory = data?.totals.newStaffStatutory ?? 0;
 
   return (

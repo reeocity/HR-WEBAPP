@@ -5,6 +5,27 @@ import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
 import { useState } from "react";
 
+interface NavLinkProps {
+  href: string;
+  children: React.ReactNode;
+  icon?: string;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+function NavLink({ href, children, icon, isActive, onClick }: NavLinkProps) {
+  return (
+    <Link 
+      href={href} 
+      className={`nav-link ${isActive ? 'active' : ''}`}
+      onClick={onClick}
+    >
+      {icon && <span className="nav-icon">{icon}</span>}
+      {children}
+    </Link>
+  );
+}
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const hideNav = pathname === "/login" || pathname === "/setup";
@@ -19,16 +40,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return pathname.startsWith(path);
   };
 
-  const NavLink = ({ href, children, icon }: { href: string; children: React.ReactNode; icon?: string }) => (
-    <Link 
-      href={href} 
-      className={`nav-link ${isActive(href) ? 'active' : ''}`}
-      onClick={() => setMobileMenuOpen(false)}
-    >
-      {icon && <span className="nav-icon">{icon}</span>}
-      {children}
-    </Link>
-  );
+  const handleNavClick = () => setMobileMenuOpen(false);
 
   return (
     <div>
@@ -57,48 +69,48 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         <nav className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
           <div className="nav-section">
-            <NavLink href="/" icon="🏠">Dashboard</NavLink>
+            <NavLink href="/" icon="🏠" isActive={isActive("/")} onClick={handleNavClick}>Dashboard</NavLink>
           </div>
 
           <div className="nav-divider"></div>
 
           <div className="nav-section">
             <div className="nav-section-title">Staff Management</div>
-            <NavLink href="/staff" icon="👥">Staff Directory</NavLink>
-            <NavLink href="/new-staff" icon="➕">New Staff</NavLink>
-            <NavLink href="/documents" icon="📄">Documents</NavLink>
-            <NavLink href="/confirmation-reminders" icon="⚠️">Confirmations</NavLink>
+            <NavLink href="/staff" icon="👥" isActive={isActive("/staff")} onClick={handleNavClick}>Staff Directory</NavLink>
+            <NavLink href="/new-staff" icon="➕" isActive={isActive("/new-staff")} onClick={handleNavClick}>New Staff</NavLink>
+            <NavLink href="/documents" icon="📄" isActive={isActive("/documents")} onClick={handleNavClick}>Documents</NavLink>
+            <NavLink href="/confirmation-reminders" icon="⚠️" isActive={isActive("/confirmation-reminders")} onClick={handleNavClick}>Confirmations</NavLink>
           </div>
 
           <div className="nav-divider"></div>
 
           <div className="nav-section">
             <div className="nav-section-title">Attendance</div>
-            <NavLink href="/lateness" icon="⏰">Lateness</NavLink>
-            <NavLink href="/absence" icon="📅">Absence</NavLink>
-            <NavLink href="/leave-schedule" icon="🏖️">Leave Schedule</NavLink>
+            <NavLink href="/lateness" icon="⏰" isActive={isActive("/lateness")} onClick={handleNavClick}>Lateness</NavLink>
+            <NavLink href="/absence" icon="📅" isActive={isActive("/absence")} onClick={handleNavClick}>Absence</NavLink>
+            <NavLink href="/leave-schedule" icon="🏖️" isActive={isActive("/leave-schedule")} onClick={handleNavClick}>Leave Schedule</NavLink>
           </div>
 
           <div className="nav-divider"></div>
 
           <div className="nav-section">
             <div className="nav-section-title">Payroll</div>
-            <NavLink href="/queries" icon="❓">Queries</NavLink>
-            <NavLink href="/deductions" icon="💰">Deductions</NavLink>
-            <NavLink href="/payroll" icon="💼">Payroll Runs</NavLink>
+            <NavLink href="/queries" icon="❓" isActive={isActive("/queries")} onClick={handleNavClick}>Queries</NavLink>
+            <NavLink href="/deductions" icon="💰" isActive={isActive("/deductions")} onClick={handleNavClick}>Deductions</NavLink>
+            <NavLink href="/payroll" icon="💼" isActive={isActive("/payroll")} onClick={handleNavClick}>Payroll Runs</NavLink>
           </div>
 
           <div className="nav-divider"></div>
 
           <div className="nav-section">
-            <NavLink href="/reports/monthly" icon="📊">Reports</NavLink>
+            <NavLink href="/reports/monthly" icon="📊" isActive={isActive("/reports/monthly")} onClick={handleNavClick}>Reports</NavLink>
           </div>
 
           <div className="nav-divider"></div>
 
           <div className="nav-section">
             <div className="nav-section-title">Administration</div>
-            <NavLink href="/users" icon="👤">Admin Users</NavLink>
+            <NavLink href="/users" icon="👤" isActive={isActive("/users")} onClick={handleNavClick}>Admin Users</NavLink>
           </div>
         </nav>
 
