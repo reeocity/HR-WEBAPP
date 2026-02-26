@@ -23,6 +23,7 @@ export async function GET(request: Request) {
   const newStaffList = await prisma.staff.findMany({
     where: {
       resumptionDate: { gte: start, lt: end },
+      status: { not: "INACTIVE" },
     },
     orderBy: { resumptionDate: "asc" },
   });
@@ -52,9 +53,10 @@ export async function GET(request: Request) {
     where: {
       date: { gte: start, lt: end },
       type: "NO_PERMISSION",
+      staff: { status: { not: "INACTIVE" } },
     },
     include: {
-      staff: { select: { id: true, fullName: true, staffId: true } },
+      staff: { select: { id: true, fullName: true, staffId: true, department: true } },
     },
     orderBy: { date: "asc" },
   });
@@ -64,6 +66,7 @@ export async function GET(request: Request) {
     where: {
       date: { gte: start, lt: end },
       type: "PERMISSION",
+      staff: { status: { not: "INACTIVE" } },
     },
     include: {
       staff: { select: { id: true, fullName: true, staffId: true, department: true } },
@@ -90,9 +93,10 @@ export async function GET(request: Request) {
   const latenessRecords = await prisma.latenessLog.findMany({
     where: {
       date: { gte: start, lt: end },
+      staff: { status: { not: "INACTIVE" } },
     },
     include: {
-      staff: { select: { id: true, fullName: true, staffId: true } },
+      staff: { select: { id: true, fullName: true, staffId: true, department: true } },
     },
     orderBy: { date: "asc" },
   });
@@ -101,9 +105,10 @@ export async function GET(request: Request) {
   const queryRecords = await prisma.queryLog.findMany({
     where: {
       date: { gte: start, lt: end },
+      staff: { status: { not: "INACTIVE" } },
     },
     include: {
-      staff: { select: { id: true, fullName: true, staffId: true } },
+      staff: { select: { id: true, fullName: true, staffId: true, department: true } },
     },
     orderBy: { date: "asc" },
   });
@@ -112,29 +117,48 @@ export async function GET(request: Request) {
   const mealTickets = await prisma.staffMealTicket.findMany({
     where: {
       date: { gte: start, lt: end },
+      staff: { status: { not: "INACTIVE" } },
     },
     include: {
-      staff: { select: { id: true, fullName: true, staffId: true } },
+      staff: { select: { id: true, fullName: true, staffId: true, department: true } },
     },
     orderBy: { date: "asc" },
   });
 
   // Fetch manual deductions
   const manualDeductions = await prisma.manualDeduction.findMany({
-    where: { month, year },
+    where: { 
+      month, 
+      year,
+      staff: { status: { not: "INACTIVE" } },
+    },
     include: {
-      staff: { select: { id: true, fullName: true, staffId: true } },
+      staff: { select: { id: true, fullName: true, staffId: true, department: true } },
     },
     orderBy: { createdAt: "asc" },
   });
 
-  // Fetch inactive staff
+  // Split manual deductions into statutory and non-statutory
+  const statutoryCategories = ["NEW_STAFF_STATUTORY_DEDUCTION", "OLD_STATUTORY_DEDUCTION"];
+  const manualStatutoryDeductions = manualDeductions.filter((d) => statutoryCategories.includes(d.category));
+  const nonStatutoryManualDeductions = manualDeductions.filter((d) => !statutoryCategories.includes(d.category));
+
+  // Fetch inactive staff - only show if inactive date is in current month or within 5 days before month start
+  const fiveDaysBeforeMonth = new Date(start);
+  fiveDaysBeforeMonth.setDate(fiveDaysBeforeMonth.getDate() - 5);
+  
   const inactiveStaff = await prisma.staff.findMany({
-    where: { status: "INACTIVE" },
+    where: { 
+      status: "INACTIVE",
+      lastActiveDate: {
+        gte: fiveDaysBeforeMonth,
+      },
+    },
     select: {
       id: true,
       staffId: true,
       fullName: true,
+      department: true,
       inactiveReason: true,
       lastActiveDate: true,
     },
@@ -143,9 +167,13 @@ export async function GET(request: Request) {
 
   // Fetch allowances
   const allowances = await prisma.monthlyAllowance.findMany({
-    where: { month, year },
+    where: { 
+      month, 
+      year,
+      staff: { status: { not: "INACTIVE" } },
+    },
     include: {
-      staff: { select: { id: true, fullName: true, staffId: true } },
+      staff: { select: { id: true, fullName: true, staffId: true, department: true } },
     },
     orderBy: { createdAt: "asc" },
   });
@@ -161,6 +189,7 @@ export async function GET(request: Request) {
       id: true,
       staffId: true,
       fullName: true,
+      department: true,
       resumptionDate: true,
     },
   });
@@ -199,12 +228,27 @@ export async function GET(request: Request) {
       return {
         staffName: staff.fullName,
         staffId: staff.staffId,
+        department: staff.department,
         amount: statutoryAmount.toString(),
         employmentMonth: employmentMonth,
         note: `${employmentMonth === 1 ? "First month" : "Second month"} statutory deduction (25%)`,
+        source: "AUTO",
       };
     })
-    .filter((s) => s !== null) as Array<{ staffName: string; staffId: string | null; amount: string; employmentMonth: number; note: string }>;
+    .filter((s) => s !== null) as Array<{ staffName: string; staffId: string | null; department: string; amount: string; employmentMonth: number; note: string; source: string }>;
+
+  // Add manual statutory deductions to statutory deductions list
+  const manualStatutoryMapped = manualStatutoryDeductions.map((d) => ({
+    staffName: d.staff.fullName,
+    staffId: d.staff.staffId,
+    department: d.staff.department,
+    amount: d.amount.toString(),
+    employmentMonth: 0, // Manual entries don't have employment month
+    note: d.note ?? d.category.replace(/_/g, " "),
+    source: "MANUAL",
+  }));
+
+  const allStatutoryDeductions = [...statutoryDeductions, ...manualStatutoryMapped];
 
   // Fetch salary upgrades (salary history entries in this month)
   const salaryUpgrades = await prisma.salaryHistory.findMany({
@@ -213,9 +257,10 @@ export async function GET(request: Request) {
         gte: start,
         lt: end,
       },
+      staff: { status: { not: "INACTIVE" } },
     },
     include: {
-      staff: { select: { id: true, fullName: true, staffId: true } },
+      staff: { select: { id: true, fullName: true, staffId: true, department: true } },
     },
     orderBy: { effectiveFrom: "asc" },
   });
@@ -235,6 +280,7 @@ export async function GET(request: Request) {
       return {
         staffName: upgrade.staff.fullName,
         staffId: upgrade.staff.staffId,
+        department: upgrade.staff.department,
         newSalary: upgrade.monthlySalary.toString(),
         previousSalary: previousSalary ? previousSalary.monthlySalary.toString() : "0",
         effectiveFrom: upgrade.effectiveFrom.toISOString().slice(0, 10),
@@ -243,13 +289,14 @@ export async function GET(request: Request) {
   );
 
   // Calculate lateness summary (group by staff) - only include staff with 3+ lateness
-  const latenessSummary: Record<string, { fullName: string; staffId: string | null; count: number }> = {};
+  const latenessSummary: Record<string, { fullName: string; staffId: string | null; department: string; count: number }> = {};
   latenessRecords.forEach((log) => {
     const staffKey = log.staffId;
     if (!latenessSummary[staffKey]) {
       latenessSummary[staffKey] = {
         fullName: log.staff.fullName,
         staffId: log.staff.staffId,
+        department: log.staff.department,
         count: 0,
       };
     }
@@ -260,13 +307,14 @@ export async function GET(request: Request) {
   const filteredLatenessSummary = Object.values(latenessSummary).filter((l) => l.count >= 3);
 
   // Calculate meal charges summary
-  const mealSummary: Record<string, { fullName: string; staffId: string | null; count: number; total: number }> = {};
+  const mealSummary: Record<string, { fullName: string; staffId: string | null; department: string; count: number; total: number }> = {};
   mealTickets.forEach((ticket) => {
     const staffKey = ticket.staffId;
     if (!mealSummary[staffKey]) {
       mealSummary[staffKey] = {
         fullName: ticket.staff.fullName,
         staffId: ticket.staff.staffId,
+        department: ticket.staff.department,
         count: 0,
         total: 0,
       };
@@ -282,6 +330,7 @@ export async function GET(request: Request) {
     absenceRecords: absenceRecords.map((a) => ({
       staffName: a.staff.fullName,
       staffId: a.staff.staffId,
+      department: a.staff.department,
       date: a.date.toISOString().slice(0, 10),
       type: a.type,
     })),
@@ -290,15 +339,17 @@ export async function GET(request: Request) {
     queries: queryRecords.map((q) => ({
       staffName: q.staff.fullName,
       staffId: q.staff.staffId,
+      department: q.staff.department,
       date: q.date.toISOString().slice(0, 10),
       reason: q.reason,
       surcharge: q.surchargeAmount?.toString() ?? "0",
       penaltyDays: q.penaltyDays ?? 0,
     })),
     mealSummary: Object.values(mealSummary),
-    manualDeductions: manualDeductions.map((m) => ({
+    manualDeductions: nonStatutoryManualDeductions.map((m) => ({
       staffName: m.staff.fullName,
       staffId: m.staff.staffId,
+      department: m.staff.department,
       category: m.category,
       amount: m.amount.toString(),
       note: m.note,
@@ -306,16 +357,18 @@ export async function GET(request: Request) {
     inactiveStaff: inactiveStaff.map((s) => ({
       staffId: s.staffId,
       fullName: s.fullName,
+      department: s.department,
       reason: s.inactiveReason,
       lastActiveDate: s.lastActiveDate ? s.lastActiveDate.toISOString().slice(0, 10) : null,
     })),
     allowances: allowances.map((a) => ({
       staffName: a.staff.fullName,
       staffId: a.staff.staffId,
+      department: a.staff.department,
       reason: a.reason,
       amount: a.amount.toString(),
     })),
-    statutoryDeductions: statutoryDeductions,
+    statutoryDeductions: allStatutoryDeductions,
     salaryUpgrades: salaryUpgradesWithComparison,
   });
 }

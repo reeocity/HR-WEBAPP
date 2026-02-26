@@ -7,16 +7,16 @@ type ReportData = {
   month: number;
   year: number;
   newStaff: Array<{ id: string; staffId: string | null; fullName: string; department: string; position: string; resumptionDate: string; accountNumber: string | null; salary: number }>;
-  absenceRecords: Array<{ staffName: string; staffId: string | null; date: string; type: string }>;
+  absenceRecords: Array<{ staffName: string; staffId: string | null; department: string; date: string; type: string }>;
   permissionAbsences: Array<{ fullName: string; staffId: string | null; department: string; count: number }>;
-  latenessSummary: Array<{ fullName: string; staffId: string | null; count: number }>;
-  queries: Array<{ staffName: string; staffId: string | null; date: string; reason: string; surcharge: string; penaltyDays: number }>;
-  mealSummary: Array<{ fullName: string; staffId: string | null; count: number; total: number }>;
-  manualDeductions: Array<{ staffName: string; staffId: string | null; category: string; amount: string; note: string | null }>;
-  inactiveStaff: Array<{ staffId: string | null; fullName: string; reason: string | null; lastActiveDate: string | null }>;
-  allowances: Array<{ staffName: string; staffId: string | null; reason: string; amount: string }>;
-  statutoryDeductions: Array<{ staffName: string; staffId: string | null; amount: string; employmentMonth: number; note: string | null }>;
-  salaryUpgrades: Array<{ staffName: string; staffId: string | null; newSalary: string; previousSalary: string; effectiveFrom: string }>;
+  latenessSummary: Array<{ fullName: string; staffId: string | null; department: string; count: number }>;
+  queries: Array<{ staffName: string; staffId: string | null; department: string; date: string; reason: string; surcharge: string; penaltyDays: number }>;
+  mealSummary: Array<{ fullName: string; staffId: string | null; department: string; count: number; total: number }>;
+  manualDeductions: Array<{ staffName: string; staffId: string | null; department: string; category: string; amount: string; note: string | null }>;
+  inactiveStaff: Array<{ staffId: string | null; fullName: string; department: string; reason: string | null; lastActiveDate: string | null }>;
+  allowances: Array<{ staffName: string; staffId: string | null; department: string; reason: string; amount: string }>;
+  statutoryDeductions: Array<{ staffName: string; staffId: string | null; department: string; amount: string; employmentMonth: number; note: string | null; source: string }>;
+  salaryUpgrades: Array<{ staffName: string; staffId: string | null; department: string; newSalary: string; previousSalary: string; effectiveFrom: string }>;
 };
 
 export default function MonthlyReportPage() {
@@ -164,7 +164,6 @@ export default function MonthlyReportPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Staff ID</th>
                     <th>Full Name</th>
                     <th>Department</th>
                     <th>Position</th>
@@ -176,7 +175,6 @@ export default function MonthlyReportPage() {
                 <tbody>
                   {data.newStaff.map((s) => (
                     <tr key={s.id}>
-                      <td>{s.staffId ?? "-"}</td>
                       <td>{s.fullName}</td>
                       <td>{s.department}</td>
                       <td>{s.position}</td>
@@ -197,7 +195,6 @@ export default function MonthlyReportPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Staff ID</th>
                     <th>Staff Name</th>
                     <th>Department</th>
                     <th>No. of Days</th>
@@ -206,7 +203,6 @@ export default function MonthlyReportPage() {
                 <tbody>
                   {data.permissionAbsences.map((p, i) => (
                     <tr key={i}>
-                      <td>{p.staffId ?? "-"}</td>
                       <td>{p.fullName}</td>
                       <td>{p.department}</td>
                       <td>{p.count}</td>
@@ -224,8 +220,8 @@ export default function MonthlyReportPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Staff ID</th>
                     <th>Staff Name</th>
+                    <th>Department</th>
                     <th>Date</th>
                     <th>Type</th>
                   </tr>
@@ -233,8 +229,8 @@ export default function MonthlyReportPage() {
                 <tbody>
                   {data.absenceRecords.map((a, i) => (
                     <tr key={i}>
-                      <td>{a.staffId ?? "-"}</td>
                       <td>{a.staffName}</td>
+                      <td>{a.department}</td>
                       <td>{a.date}</td>
                       <td>{a.type}</td>
                     </tr>
@@ -252,8 +248,8 @@ export default function MonthlyReportPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Staff ID</th>
                     <th>Staff Name</th>
+                    <th>Department</th>
                     <th>Lateness Count</th>
                     <th>Notes</th>
                   </tr>
@@ -261,8 +257,8 @@ export default function MonthlyReportPage() {
                 <tbody>
                   {data.latenessSummary.map((l, i) => (
                     <tr key={i}>
-                      <td>{l.staffId ?? "-"}</td>
                       <td>{l.fullName}</td>
+                      <td>{l.department}</td>
                       <td>{l.count} times</td>
                       <td className="muted" style={{ fontSize: "0.9em" }}>
                         {l.count <= 2 && "No penalty"}
@@ -286,8 +282,8 @@ export default function MonthlyReportPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Staff ID</th>
                     <th>Staff Name</th>
+                    <th>Department</th>
                     <th>Date</th>
                     <th>Reason</th>
                     <th>Surcharge</th>
@@ -297,8 +293,8 @@ export default function MonthlyReportPage() {
                 <tbody>
                   {data.queries.map((q, i) => (
                     <tr key={i}>
-                      <td>{q.staffId ?? "-"}</td>
                       <td>{q.staffName}</td>
+                      <td>{q.department}</td>
                       <td>{q.date}</td>
                       <td>{q.reason}</td>
                       <td>{formatNaira(Number(q.surcharge))}</td>
@@ -317,8 +313,8 @@ export default function MonthlyReportPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Staff ID</th>
                     <th>Staff Name</th>
+                    <th>Department</th>
                     <th>Tickets Count</th>
                     <th>Total Amount</th>
                   </tr>
@@ -326,8 +322,8 @@ export default function MonthlyReportPage() {
                 <tbody>
                   {data.mealSummary.map((m, i) => (
                     <tr key={i}>
-                      <td>{m.staffId ?? "-"}</td>
                       <td>{m.fullName}</td>
+                      <td>{m.department}</td>
                       <td>{m.count}</td>
                       <td>{formatNaira(m.total)}</td>
                     </tr>
@@ -344,8 +340,8 @@ export default function MonthlyReportPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Staff ID</th>
                     <th>Staff Name</th>
+                    <th>Department</th>
                     <th>Category</th>
                     <th>Amount</th>
                     <th>Note</th>
@@ -354,8 +350,8 @@ export default function MonthlyReportPage() {
                 <tbody>
                   {data.manualDeductions.map((d, i) => (
                     <tr key={i}>
-                      <td>{d.staffId ?? "-"}</td>
                       <td>{d.staffName}</td>
+                      <td>{d.department}</td>
                       <td>{d.category}</td>
                       <td>{formatNaira(Number(d.amount))}</td>
                       <td className="muted">{d.note ?? "-"}</td>
@@ -370,15 +366,15 @@ export default function MonthlyReportPage() {
           {data.statutoryDeductions.length > 0 && (
             <section className="card">
               <h2 style={{ marginBottom: "8px", color: "#1a202c", fontSize: "1.3rem", fontWeight: "600" }}>
-                Statutory Deductions - New Staff ({data.statutoryDeductions.length})
+                Statutory Deductions ({data.statutoryDeductions.length})
               </h2>
-              <p className="muted" style={{ marginBottom: "12px" }}>Staff in their first or second month of employment</p>
+              <p className="muted" style={{ marginBottom: "12px" }}>Includes auto-calculated deductions for new staff and manual statutory deductions</p>
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Staff ID</th>
                     <th>Staff Name</th>
-                    <th>Employment Month</th>
+                    <th>Department</th>
+                    <th>Type</th>
                     <th>Amount</th>
                     <th>Note</th>
                   </tr>
@@ -386,12 +382,17 @@ export default function MonthlyReportPage() {
                 <tbody>
                   {data.statutoryDeductions.map((s, i) => (
                     <tr key={i}>
-                      <td>{s.staffId ?? "-"}</td>
                       <td>{s.staffName}</td>
+                      <td>{s.department}</td>
                       <td>
-                        {s.employmentMonth === 1 && "1st Month"}
-                        {s.employmentMonth === 2 && "2nd Month"}
-                        {s.employmentMonth > 2 && `${s.employmentMonth}th Month`}
+                        {s.source === "AUTO" && (
+                          <span>
+                            {s.employmentMonth === 1 && "1st Month"}
+                            {s.employmentMonth === 2 && "2nd Month"}
+                            {s.employmentMonth > 2 && `${s.employmentMonth}th Month`}
+                          </span>
+                        )}
+                        {s.source === "MANUAL" && <span className="muted">Manual Entry</span>}
                       </td>
                       <td>{formatNaira(Number(s.amount))}</td>
                       <td className="muted">{s.note ?? "-"}</td>
@@ -411,8 +412,8 @@ export default function MonthlyReportPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Staff ID</th>
                     <th>Staff Name</th>
+                    <th>Department</th>
                     <th>Previous Salary</th>
                     <th>New Salary</th>
                     <th>Difference</th>
@@ -426,8 +427,8 @@ export default function MonthlyReportPage() {
                     const diff = newSal - prev;
                     return (
                       <tr key={i}>
-                        <td>{s.staffId ?? "-"}</td>
                         <td>{s.staffName}</td>
+                        <td>{s.department}</td>
                         <td>{formatNaira(prev)}</td>
                         <td>{formatNaira(newSal)}</td>
                         <td style={{ color: diff >= 0 ? "green" : "red" }}>
@@ -449,8 +450,8 @@ export default function MonthlyReportPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Staff ID</th>
                     <th>Full Name</th>
+                    <th>Department</th>
                     <th>Reason</th>
                     <th>Last Active Date</th>
                   </tr>
@@ -458,8 +459,8 @@ export default function MonthlyReportPage() {
                 <tbody>
                   {data.inactiveStaff.map((s, i) => (
                     <tr key={i}>
-                      <td>{s.staffId ?? "-"}</td>
                       <td>{s.fullName}</td>
+                      <td>{s.department}</td>
                       <td>{s.reason ?? "-"}</td>
                       <td>{s.lastActiveDate ?? "-"}</td>
                     </tr>
@@ -476,8 +477,8 @@ export default function MonthlyReportPage() {
               <table className="table">
                 <thead>
                   <tr>
-                    <th>Staff ID</th>
                     <th>Staff Name</th>
+                    <th>Department</th>
                     <th>Reason</th>
                     <th>Amount</th>
                   </tr>
@@ -485,8 +486,8 @@ export default function MonthlyReportPage() {
                 <tbody>
                   {data.allowances.map((a, i) => (
                     <tr key={i}>
-                      <td>{a.staffId ?? "-"}</td>
                       <td>{a.staffName}</td>
+                      <td>{a.department}</td>
                       <td>{a.reason}</td>
                       <td>{formatNaira(Number(a.amount))}</td>
                     </tr>
